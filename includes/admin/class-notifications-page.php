@@ -60,7 +60,7 @@ class Notifications_Page {
      */
     public function register_menu() {
         add_submenu_page(
-            'ryvr-ai-dashboard',
+            'ryvr-ai',
             __('Notifications', 'ryvr-ai'),
             __('Notifications', 'ryvr-ai'),
             'edit_posts',
@@ -77,16 +77,16 @@ class Notifications_Page {
     public function modify_menu_title() {
         global $submenu;
         
-        if (!isset($submenu['ryvr-ai-dashboard'])) {
+        if (!isset($submenu['ryvr-ai'])) {
             return;
         }
         
         $unread_count = $this->get_unread_notification_count();
         
         if ($unread_count > 0) {
-            foreach ($submenu['ryvr-ai-dashboard'] as $key => $item) {
+            foreach ($submenu['ryvr-ai'] as $key => $item) {
                 if ($item[2] === 'ryvr-notifications') {
-                    $submenu['ryvr-ai-dashboard'][$key][0] = sprintf(
+                    $submenu['ryvr-ai'][$key][0] = sprintf(
                         __('Notifications %s', 'ryvr-ai'),
                         '<span class="update-plugins count-' . $unread_count . '"><span class="plugin-count">' . $unread_count . '</span></span>'
                     );
@@ -134,7 +134,7 @@ class Notifications_Page {
      */
     public function enqueue_scripts($hook) {
         // Only load on our notifications page.
-        if ($hook !== 'ryvr_page_ryvr-notifications') {
+        if ($hook !== 'ryvr-ai_page_ryvr-notifications') {
             // Still load the notification indicator scripts.
             wp_enqueue_style('ryvr-notification-indicator', RYVR_ASSETS_URL . 'css/notification-indicator.css', [], RYVR_VERSION);
             wp_enqueue_script('ryvr-notification-indicator', RYVR_ASSETS_URL . 'js/notification-indicator.js', ['jquery'], RYVR_VERSION, true);

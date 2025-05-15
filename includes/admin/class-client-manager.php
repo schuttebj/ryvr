@@ -220,7 +220,7 @@ class Client_Manager {
      */
     public function add_admin_menu() {
         add_submenu_page(
-            'ryvr-ai-dashboard',
+            'ryvr-ai',
             __('Clients', 'ryvr-ai'),
             __('Clients', 'ryvr-ai'),
             'manage_options',
