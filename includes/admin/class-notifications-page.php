@@ -60,11 +60,11 @@ class Notifications_Page {
      */
     public function register_menu() {
         add_submenu_page(
-            'ryvr-ai',
+            'ryvr-ai-direct',
             __('Notifications', 'ryvr-ai'),
             __('Notifications', 'ryvr-ai'),
-            'edit_posts',
-            'ryvr-notifications',
+            'read',
+            'ryvr-ai-notifications',
             [$this, 'render_page']
         );
     }
@@ -77,16 +77,16 @@ class Notifications_Page {
     public function modify_menu_title() {
         global $submenu;
         
-        if (!isset($submenu['ryvr-ai'])) {
+        if (!isset($submenu['ryvr-ai-direct'])) {
             return;
         }
         
         $unread_count = $this->get_unread_notification_count();
         
         if ($unread_count > 0) {
-            foreach ($submenu['ryvr-ai'] as $key => $item) {
-                if ($item[2] === 'ryvr-notifications') {
-                    $submenu['ryvr-ai'][$key][0] = sprintf(
+            foreach ($submenu['ryvr-ai-direct'] as $key => $item) {
+                if ($item[2] === 'ryvr-ai-notifications') {
+                    $submenu['ryvr-ai-direct'][$key][0] = sprintf(
                         __('Notifications %s', 'ryvr-ai'),
                         '<span class="update-plugins count-' . $unread_count . '"><span class="plugin-count">' . $unread_count . '</span></span>'
                     );
@@ -118,7 +118,7 @@ class Notifications_Page {
         $wp_admin_bar->add_node([
             'id'    => 'ryvr-notifications',
             'title' => '<span class="ab-icon dashicons dashicons-bell"></span><span class="ab-label">' . $unread_count . '</span>',
-            'href'  => admin_url('admin.php?page=ryvr-notifications'),
+            'href'  => admin_url('admin.php?page=ryvr-ai-notifications'),
             'meta'  => [
                 'title' => $title,
                 'class' => 'ryvr-notifications-indicator',
@@ -134,7 +134,7 @@ class Notifications_Page {
      */
     public function enqueue_scripts($hook) {
         // Only load on our notifications page.
-        if ($hook !== 'ryvr-ai_page_ryvr-notifications') {
+        if ($hook !== 'ryvr-ai-direct_page_ryvr-ai-notifications') {
             // Still load the notification indicator scripts.
             wp_enqueue_style('ryvr-notification-indicator', RYVR_ASSETS_URL . 'css/notification-indicator.css', [], RYVR_VERSION);
             wp_enqueue_script('ryvr-notification-indicator', RYVR_ASSETS_URL . 'js/notification-indicator.js', ['jquery'], RYVR_VERSION, true);
