@@ -371,44 +371,6 @@ function ryvr_init_admin_early() {
 }
 
 /**
- * Direct registration of admin menu items without Admin class
- */
-function ryvr_register_admin_menu_directly() {
-    error_log('Ryvr DEBUG: Direct admin menu registration function called');
-    
-    // Main menu item
-    add_menu_page(
-        'Ryvr AI Platform',
-        'Ryvr AI Direct',
-        'read',
-        'ryvr-ai-direct',
-        'ryvr_render_dashboard_directly',
-        'dashicons-chart-area',
-        31
-    );
-    
-    // Dashboard submenu
-    add_submenu_page(
-        'ryvr-ai-direct',
-        'Dashboard',
-        'Dashboard',
-        'read',
-        'ryvr-ai-direct',
-        'ryvr_render_dashboard_directly'
-    );
-}
-
-/**
- * Render a simple dashboard page
- */
-function ryvr_render_dashboard_directly() {
-    echo '<div class="wrap">';
-    echo '<h1>Ryvr AI Direct Dashboard</h1>';
-    echo '<p>This is a directly registered dashboard page that bypasses the Admin class.</p>';
-    echo '</div>';
-}
-
-/**
  * Add a direct debug menu item for debugging (to see if admin menu works at all)
  */
 function ryvr_add_direct_debug_menu() {
@@ -499,9 +461,6 @@ function ryvr_render_debug_page() {
 
 // Add our direct debug menu - keep this one for debugging
 add_action('admin_menu', 'ryvr_add_direct_debug_menu');
-
-// Restore direct menu registration
-add_action('admin_menu', 'ryvr_register_admin_menu_directly', 10);
 
 // Restore early admin initialization
 add_action('admin_menu', 'ryvr_init_admin_early', 5); // Priority 5 to run before normal menu items

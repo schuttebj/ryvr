@@ -72,7 +72,7 @@
      * @param {number} count Unread count.
      */
     function updateNotificationMenuCount(count) {
-        var $menuItem = $('#toplevel_page_ryvr-dashboard .wp-submenu li a[href$="page=ryvr-notifications"]');
+        var $menuItem = $('#toplevel_page_ryvr-ai .wp-submenu li a[href$="page=ryvr-ai-notifications"]');
         
         if ($menuItem.length > 0) {
             // Remove existing count
