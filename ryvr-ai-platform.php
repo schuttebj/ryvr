@@ -497,14 +497,14 @@ function ryvr_render_debug_page() {
     echo '</div>';
 }
 
-// Add our direct debug menu
+// Add our direct debug menu - keep this one for debugging
 add_action('admin_menu', 'ryvr_add_direct_debug_menu');
 
-// Add direct menu registration
-add_action('admin_menu', 'ryvr_register_admin_menu_directly', 10);
+// Comment out direct menu registration to prevent duplicates
+// add_action('admin_menu', 'ryvr_register_admin_menu_directly', 10);
 
-// Add early admin initialization
-add_action('admin_menu', 'ryvr_init_admin_early', 5); // Priority 5 to run before normal menu items
+// Comment out early admin initialization to prevent duplicates
+// add_action('admin_menu', 'ryvr_init_admin_early', 5);
 
 // Register activation, deactivation, and uninstallation hooks
 register_activation_hook( __FILE__, 'activate_ryvr_ai_platform' );

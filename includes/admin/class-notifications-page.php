@@ -172,83 +172,8 @@ class Notifications_Page {
      * @return void
      */
     public function render_page() {
-        // Get notifications from the database.
-        $platform_channel = new \Ryvr\Notifications\Channels\Platform_Channel();
-        $notifications = $platform_channel->get_notifications(get_current_user_id(), false, 100);
-        
-        // Start output.
-        ?>
-        <div class="wrap ryvr-notifications-wrap">
-            <h1><?php esc_html_e('Notifications', 'ryvr-ai'); ?></h1>
-            
-            <div class="ryvr-notifications-actions">
-                <button type="button" class="button ryvr-mark-all-read">
-                    <?php esc_html_e('Mark All as Read', 'ryvr-ai'); ?>
-                </button>
-                
-                <div class="ryvr-notifications-filters">
-                    <label>
-                        <input type="checkbox" id="ryvr-show-unread-only">
-                        <?php esc_html_e('Show Unread Only', 'ryvr-ai'); ?>
-                    </label>
-                </div>
-            </div>
-            
-            <div class="ryvr-notifications-list">
-                <?php if (empty($notifications)) : ?>
-                    <div class="ryvr-no-notifications">
-                        <p><?php esc_html_e('No notifications found.', 'ryvr-ai'); ?></p>
-                    </div>
-                <?php else : ?>
-                    <?php foreach ($notifications as $notification) : ?>
-                        <div class="ryvr-notification <?php echo $notification->read ? 'ryvr-notification-read' : 'ryvr-notification-unread'; ?>" data-id="<?php echo esc_attr($notification->id); ?>">
-                            <div class="ryvr-notification-header">
-                                <h3 class="ryvr-notification-title"><?php echo esc_html($notification->title); ?></h3>
-                                <div class="ryvr-notification-meta">
-                                    <span class="ryvr-notification-date"><?php echo esc_html(human_time_diff(strtotime($notification->created_at), current_time('timestamp')) . ' ' . __('ago', 'ryvr-ai')); ?></span>
-                                    <span class="ryvr-notification-status"><?php echo $notification->read ? esc_html__('Read', 'ryvr-ai') : esc_html__('Unread', 'ryvr-ai'); ?></span>
-                                </div>
-                            </div>
-                            
-                            <div class="ryvr-notification-content">
-                                <?php echo wp_kses_post(wpautop($notification->message)); ?>
-                                
-                                <?php if (!empty($notification->data) && isset($notification->data['task_url'])) : ?>
-                                    <p class="ryvr-notification-actions">
-                                        <a href="<?php echo esc_url($notification->data['task_url']); ?>" class="button button-primary">
-                                            <?php esc_html_e('View Task', 'ryvr-ai'); ?>
-                                        </a>
-                                    </p>
-                                <?php endif; ?>
-                                
-                                <?php if (!empty($notification->data) && isset($notification->data['approval_url'])) : ?>
-                                    <p class="ryvr-notification-actions">
-                                        <a href="<?php echo esc_url($notification->data['approval_url']); ?>" class="button button-primary">
-                                            <?php esc_html_e('Approve Task', 'ryvr-ai'); ?>
-                                        </a>
-                                    </p>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="ryvr-notification-actions">
-                                <button type="button" class="button ryvr-toggle-read">
-                                    <?php echo $notification->read ? esc_html__('Mark as Unread', 'ryvr-ai') : esc_html__('Mark as Read', 'ryvr-ai'); ?>
-                                </button>
-                                <button type="button" class="button ryvr-delete-notification">
-                                    <?php esc_html_e('Delete', 'ryvr-ai'); ?>
-                                </button>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
-            
-            <div class="ryvr-notifications-loading" style="display: none;">
-                <span class="spinner is-active"></span>
-                <p><?php esc_html_e('Loading...', 'ryvr-ai'); ?></p>
-            </div>
-        </div>
-        <?php
+        // Use template file instead of inline HTML
+        require_once RYVR_TEMPLATES_DIR . 'admin/notifications.php';
     }
 
     /**
@@ -257,6 +182,12 @@ class Notifications_Page {
      * @return int
      */
     private function get_unread_notification_count() {
+        // Make sure the class exists to prevent fatal errors
+        if (!class_exists('\\Ryvr\\Notifications\\Channels\\Platform_Channel')) {
+            error_log('Ryvr ERROR: Platform_Channel class not found in get_unread_notification_count');
+            return 0;
+        }
+        
         $platform_channel = new \Ryvr\Notifications\Channels\Platform_Channel();
         return $platform_channel->get_unread_count(get_current_user_id());
     }
