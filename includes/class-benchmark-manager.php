@@ -118,7 +118,7 @@ class Benchmark_Manager {
      */
     public function register_admin_menu() {
         add_submenu_page(
-            'ryvr',
+            'ryvr-ai',
             __( 'Industry Benchmarks', 'ryvr-ai' ),
             __( 'Benchmarks', 'ryvr-ai' ),
             'manage_options',
