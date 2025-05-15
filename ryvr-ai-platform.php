@@ -3,7 +3,7 @@
  * Plugin Name: Ryvr AI Platform
  * Plugin URI: https://ryvr.ai
  * Description: Digital agency automation platform leveraging OpenAI and DataForSEO APIs to automate SEO, PPC, and content tasks.
- * Version: 1.0.8
+ * Version: 1.0.10
  * Author: Ryvr
  * Author URI: https://ryvr.ai
  * Text Domain: ryvr-ai
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'RYVR_VERSION', '1.0.8' );
+define( 'RYVR_VERSION', '1.0.10' );
 define( 'RYVR_DB_VERSION', '1.0.0' );
 define( 'RYVR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'RYVR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -334,7 +334,71 @@ function run_ryvr_ai_platform() {
 }
 
 /**
- * Add a direct menu item for debugging (to see if admin menu works at all)
+ * Initialize admin class early for menu registration
+ */
+function ryvr_init_admin_early() {
+    error_log('Ryvr DEBUG: Early admin initialization function called');
+    
+    // Load all required files
+    require_once RYVR_INCLUDES_DIR . 'admin/class-admin.php';
+    require_once RYVR_INCLUDES_DIR . 'admin/class-settings.php';
+    require_once RYVR_INCLUDES_DIR . 'admin/class-tasks.php';
+    require_once RYVR_INCLUDES_DIR . 'admin/class-notifications-page.php';
+    require_once RYVR_INCLUDES_DIR . 'admin/class-debug-page.php';
+    require_once RYVR_INCLUDES_DIR . 'admin/class-client-manager.php';
+    require_once RYVR_INCLUDES_DIR . 'notifications/class-notification-manager.php';
+    require_once RYVR_INCLUDES_DIR . 'class-benchmark-manager.php';
+    
+    // Initialize admin directly
+    try {
+        $admin = new \Ryvr\Admin\Admin();
+        $admin->init();
+        error_log('Ryvr DEBUG: Admin class initialized directly');
+    } catch (Exception $e) {
+        error_log('Ryvr DEBUG: Error initializing Admin class: ' . $e->getMessage());
+    }
+}
+
+/**
+ * Direct registration of admin menu items without Admin class
+ */
+function ryvr_register_admin_menu_directly() {
+    error_log('Ryvr DEBUG: Direct admin menu registration function called');
+    
+    // Main menu item
+    add_menu_page(
+        'Ryvr AI Platform',
+        'Ryvr AI Direct',
+        'read',
+        'ryvr-ai-direct',
+        'ryvr_render_dashboard_directly',
+        'dashicons-chart-area',
+        31
+    );
+    
+    // Dashboard submenu
+    add_submenu_page(
+        'ryvr-ai-direct',
+        'Dashboard',
+        'Dashboard',
+        'read',
+        'ryvr-ai-direct',
+        'ryvr_render_dashboard_directly'
+    );
+}
+
+/**
+ * Render a simple dashboard page
+ */
+function ryvr_render_dashboard_directly() {
+    echo '<div class="wrap">';
+    echo '<h1>Ryvr AI Direct Dashboard</h1>';
+    echo '<p>This is a directly registered dashboard page that bypasses the Admin class.</p>';
+    echo '</div>';
+}
+
+/**
+ * Add a direct debug menu item for debugging (to see if admin menu works at all)
  */
 function ryvr_add_direct_debug_menu() {
     error_log('Ryvr DEBUG: Direct menu registration function called');
@@ -385,11 +449,51 @@ function ryvr_render_debug_page() {
     echo '<li>Has manage_options: ' . (current_user_can('manage_options') ? 'Yes' : 'No') . '</li>';
     echo '</ul>';
     
+    // Show admin class diagnostics
+    echo '<h2>Admin Class Diagnostics</h2>';
+    echo '<ul>';
+    echo '<li>Admin class exists: ' . (class_exists('\\Ryvr\\Admin\\Admin') ? 'Yes' : 'No') . '</li>';
+    
+    // Check if admin/class-admin.php file exists
+    $admin_file = RYVR_INCLUDES_DIR . 'admin/class-admin.php';
+    echo '<li>Admin file exists: ' . (file_exists($admin_file) ? 'Yes' : 'No') . ' (' . $admin_file . ')</li>';
+    
+    // Check if Ryvr components are initialized
+    $main_instance = ryvr();
+    $components = $main_instance->get_components();
+    echo '<li>Admin component initialized: ' . (isset($components['admin']) ? 'Yes' : 'No') . '</li>';
+    
+    // List all initialized components
+    echo '<li>Initialized components: ' . implode(', ', array_keys($components)) . '</li>';
+    echo '</ul>';
+    
+    // Try direct access to menu registration
+    echo '<h2>Try Admin Menu Registration</h2>';
+    echo '<p>Attempting to register admin menu directly:</p>';
+    try {
+        // Try loading the Admin class
+        if (!class_exists('\\Ryvr\\Admin\\Admin')) {
+            require_once RYVR_INCLUDES_DIR . 'admin/class-admin.php';
+        }
+        
+        $admin = new \Ryvr\Admin\Admin();
+        $admin->init();
+        echo '<p>Successfully loaded Admin class and called init()</p>';
+    } catch (Exception $e) {
+        echo '<p>Error: ' . $e->getMessage() . '</p>';
+    }
+    
     echo '</div>';
 }
 
 // Add our direct debug menu
 add_action('admin_menu', 'ryvr_add_direct_debug_menu');
+
+// Add direct menu registration
+add_action('admin_menu', 'ryvr_register_admin_menu_directly', 10);
+
+// Add early admin initialization
+add_action('admin_menu', 'ryvr_init_admin_early', 5); // Priority 5 to run before normal menu items
 
 // Register activation, deactivation, and uninstallation hooks
 register_activation_hook( __FILE__, 'activate_ryvr_ai_platform' );
