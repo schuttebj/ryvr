@@ -13,8 +13,9 @@ namespace Ryvr\Benchmarks;
 use Ryvr\Database\Database_Manager;
 use Exception;
 
-// Create a local alias to use the correct class
-use Ryvr\API\Services\DataForSEO_Service;
+// Import the DataForSEO service interfaces to support both versions
+use Ryvr\API\DataForSEO_Service as LegacyDataForSEO;
+use Ryvr\API\Services\DataForSEO_Service as NewDataForSEO;
 
 /**
  * The Benchmark Manager class.
@@ -38,7 +39,7 @@ class Benchmark_Manager {
     /**
      * DataForSEO service instance.
      *
-     * @var object
+     * @var LegacyDataForSEO|NewDataForSEO
      */
     private $dataforseo;
 
@@ -89,8 +90,8 @@ class Benchmark_Manager {
     /**
      * Initialize the class.
      *
-     * @param Database_Manager    $db_manager Database manager instance.
-     * @param object              $dataforseo DataForSEO service instance.
+     * @param Database_Manager                    $db_manager Database manager instance.
+     * @param LegacyDataForSEO|NewDataForSEO|null $dataforseo DataForSEO service instance.
      * @return void
      */
     public function init( Database_Manager $db_manager, $dataforseo = null ) {
