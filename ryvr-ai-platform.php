@@ -306,8 +306,12 @@ function activate_ryvr_ai_platform() {
  * The code that runs during plugin initialization.
  */
 function init_ryvr_ai_platform() {
+    // Include database manager file first
+    require_once plugin_dir_path( __FILE__ ) . 'includes/database/class-database-manager.php';
+    
     // Check if database needs update
     $db_manager = new \Ryvr\Database\Database_Manager();
+    $db_manager->init(); // Initialize the database manager first
     if ($db_manager->needs_update()) {
         $db_manager->update();
     }
@@ -334,6 +338,6 @@ function run_ryvr_ai_platform() {
 register_activation_hook( __FILE__, 'activate_ryvr_ai_platform' );
 register_deactivation_hook( __FILE__, 'deactivate_ryvr_ai_platform' );
 
-// Initialize the plugin
-add_action('plugins_loaded', 'init_ryvr_ai_platform');
-add_action('plugins_loaded', 'run_ryvr_ai_platform'); 
+// Initialize the plugin - run database update first, then initialize the main plugin
+add_action('plugins_loaded', 'init_ryvr_ai_platform', 5); // Lower priority number means it runs earlier
+add_action('plugins_loaded', 'run_ryvr_ai_platform', 10); // Default priority 
