@@ -1,0 +1,28 @@
+/**
+ * Notification Indicator CSS
+ *
+ * Styles for the notification indicator in the admin bar.
+ */
+
+#wp-admin-bar-ryvr-notifications .ab-icon {
+    margin-right: 5px !important;
+}
+
+#wp-admin-bar-ryvr-notifications .ab-icon::before {
+    content: "\f16d";
+    top: 2px;
+}
+
+#wp-admin-bar-ryvr-notifications .ab-label {
+    display: inline-block;
+    background-color: #d63638;
+    color: #fff;
+    font-size: 10px;
+    line-height: 16px;
+    height: 16px;
+    min-width: 16px;
+    text-align: center;
+    border-radius: 8px;
+    margin-left: 4px;
+    padding: 0 4px;
+} 

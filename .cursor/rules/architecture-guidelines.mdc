@@ -1,0 +1,48 @@
+---
+description: This rule outlines the architectural patterns and guidelines for the Ryvr AI Platform. Use this rule when designing new components or reviewing system architecture to ensure consistency with the established patterns.
+globs: 
+alwaysApply: false
+---
+# Architecture Guidelines
+
+> [!AGENT_REQUEST]
+> This rule outlines the architectural patterns and guidelines for the Ryvr AI Platform. Use this rule when designing new components or reviewing system architecture to ensure consistency with the established patterns.
+
+## System Components
+
+### Parent Platform
+- Built as WordPress multisite installation
+- Uses Bricks Builder for frontend
+- Serves as the main dashboard and API orchestration layer
+- Houses all core automation logic
+- Manages user accounts, subscriptions, and credits
+
+### Child Plugin
+- Standard WordPress plugin format
+- Communicates with parent via secure JWT authentication
+- Local queue system for processing tasks
+- Content deployment system for publishing generated content
+- Local caching for improved performance
+
+## Database Structure
+- User/role schema (admin, manager, user, employee)
+- Projects/clients management tables
+- Credits/subscription tracking
+- Task history and logs
+- Extensible metadata structure
+
+## API Layer Design
+- Service-oriented architecture
+- API Gateway pattern for external services
+- Rate limiting and usage tracking
+- Caching layer to reduce API calls
+- Comprehensive error handling
+
+## Extensibility Framework
+- WordPress-style hooks/filters system
+- Service container pattern for dependency injection
+- Abstract classes and interfaces for all major components
+- Event-driven architecture for task processing
+- Feature flags for progressive rollout
+
+

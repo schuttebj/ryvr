@@ -1,0 +1,46 @@
+---
+description: This rule defines standards for integrating external APIs in the Ryvr AI Platform. Refer to this rule when implementing new API connections or modifying existing integrations to maintain a consistent approach to external services.
+globs: 
+alwaysApply: false
+---
+# API Integration Guidelines
+
+> [!AGENT_REQUEST]
+> This rule defines standards for integrating external APIs in the Ryvr AI Platform. Refer to this rule when implementing new API connections or modifying existing integrations to maintain a consistent approach to external services.
+
+## Core API Integrations
+
+### OpenAI Integration
+- Always implement API key rotation
+- Create abstractable prompts that can be modified without code changes
+- Implement robust error handling for rate limits and token limits
+- Cache responses where appropriate to reduce API costs
+- Add fallback mechanisms for when the API is unavailable
+
+### DataForSEO Integration
+- Implement a standardized wrapper for all DataForSEO endpoints
+- Create endpoint-specific abstraction layers
+- Cache responses based on data freshness requirements
+- Implement usage tracking per customer
+- Create sandbox mode for testing without using actual API credits
+
+## API Abstraction Layer
+
+All external API integrations should follow these patterns:
+
+1. **Service Interface**: Define an interface for each service capability
+2. **Implementation Class**: Create concrete implementations for each API provider
+3. **Factory/Container**: Use dependency injection to select the appropriate implementation
+4. **Response Normalization**: Standardize response formats across different providers
+5. **Error Handling**: Implement consistent error handling and retries
+6. **Caching Strategy**: Define TTL and invalidation rules for each endpoint
+7. **Logging**: Log all API interactions for debugging and usage tracking
+
+## Authentication Management
+- Store API credentials securely in the database with encryption
+- Implement key rotation capabilities
+- Create a key management interface for administrators
+- Monitor for invalid or expiring credentials
+- Support multiple authentication methods (API key, OAuth, JWT)
+
+

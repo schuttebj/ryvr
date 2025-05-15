@@ -1,0 +1,241 @@
+/**
+ * Benchmarks CSS
+ *
+ * Styles for the benchmarks admin page.
+ */
+
+/* Main container */
+.ryvr-benchmarks-wrap {
+    margin: 20px 0;
+}
+
+.ryvr-benchmarks-description {
+    margin-bottom: 25px;
+    max-width: 800px;
+}
+
+/* Filters */
+.ryvr-benchmarks-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ryvr-benchmark-filter {
+    min-width: 200px;
+    flex: 1;
+}
+
+.ryvr-benchmark-filter label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #23282d;
+}
+
+.ryvr-benchmark-filter-select {
+    width: 100%;
+    max-width: 100%;
+}
+
+.ryvr-benchmark-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+    align-self: flex-end;
+}
+
+/* Loading & empty states */
+.ryvr-benchmarks-loading,
+.ryvr-benchmarks-error,
+.ryvr-benchmarks-empty {
+    padding: 50px 20px;
+    text-align: center;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ryvr-benchmarks-loading .spinner {
+    float: none;
+    margin: 0 auto 15px;
+}
+
+.ryvr-benchmarks-error {
+    border-left: 4px solid #dc3232;
+}
+
+.ryvr-benchmarks-error-message {
+    color: #dc3232;
+    font-weight: 500;
+}
+
+/* Content container */
+.ryvr-benchmarks-content {
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.ryvr-benchmarks-header {
+    margin-bottom: 25px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+.ryvr-benchmarks-title {
+    margin: 0 0 5px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #23282d;
+}
+
+.ryvr-benchmarks-subtitle {
+    margin: 0;
+    color: #646970;
+    font-size: 14px;
+}
+
+/* Summary section */
+.ryvr-benchmarks-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.ryvr-benchmarks-summary-card {
+    flex: 1;
+    min-width: 300px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    border-left: 4px solid #2271b1;
+}
+
+.ryvr-benchmarks-summary-card h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: #23282d;
+}
+
+.ryvr-benchmarks-meta {
+    margin-top: 15px;
+    font-size: 13px;
+}
+
+.ryvr-benchmarks-meta p {
+    margin: 5px 0;
+}
+
+/* Charts section */
+.ryvr-benchmarks-charts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.ryvr-benchmarks-chart-container {
+    flex: 1;
+    min-width: 45%;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ryvr-benchmarks-chart-container h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: #23282d;
+}
+
+.ryvr-chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Table section */
+.ryvr-benchmarks-table-container {
+    margin-bottom: 30px;
+}
+
+.ryvr-benchmarks-table-container h3 {
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: #23282d;
+}
+
+.ryvr-benchmarks-table th {
+    font-weight: 600;
+}
+
+.ryvr-benchmarks-table td.positive-change {
+    color: #00a32a;
+}
+
+.ryvr-benchmarks-table td.negative-change {
+    color: #d63638;
+}
+
+/* Insights section */
+.ryvr-benchmarks-insights {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    border-left: 4px solid #2271b1;
+}
+
+.ryvr-benchmarks-insights h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: #23282d;
+}
+
+.ryvr-benchmarks-insights-content {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.ryvr-benchmarks-insight-item {
+    margin-bottom: 15px;
+}
+
+.ryvr-benchmarks-insight-title {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 782px) {
+    .ryvr-benchmarks-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .ryvr-benchmark-actions {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+    
+    .ryvr-benchmarks-charts {
+        flex-direction: column;
+    }
+    
+    .ryvr-benchmarks-chart-container {
+        min-width: 100%;
+    }
+} 

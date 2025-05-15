@@ -1,0 +1,79 @@
+---
+description: This rule defines the design and implementation principles for the Ryvr Task Engine. Use this rule when developing task-related functionality to ensure proper implementation of the task lifecycle, processing flow, and extension points.
+globs: 
+alwaysApply: false
+---
+# Task Engine Framework
+
+> [!AGENT_REQUEST]
+> This rule defines the design and implementation principles for the Ryvr Task Engine. Use this rule when developing task-related functionality to ensure proper implementation of the task lifecycle, processing flow, and extension points.
+
+## Core Concepts
+
+### Task
+A Task represents a discrete unit of work that needs to be performed, such as:
+- Keyword research
+- Content generation
+- SEO auditing
+- Ad copy creation
+- Backlink analysis
+
+### Task Definition
+Each Task should be defined with:
+- Unique identifier
+- Human-readable name
+- Description
+- Required inputs
+- Expected outputs
+- Permissions required
+- Credit cost
+- Estimated completion time
+
+### Task Status Flow
+Tasks follow a specific lifecycle:
+1. `DRAFT` - Task created but not submitted
+2. `PENDING` - Task submitted and awaiting processing
+3. `APPROVAL_REQUIRED` - Task requires manual approval to proceed
+4. `PROCESSING` - Task is actively being processed
+5. `COMPLETED` - Task finished successfully
+6. `FAILED` - Task encountered an error
+7. `CANCELED` - Task was canceled by user
+
+## Implementation Guidelines
+
+### Task Registration
+- Each task type must register itself with the task registry
+- Task definitions should be stored in the database for flexibility
+- Allow for versioning of task definitions
+
+### Task Scheduler
+- Implement a priority-based task queue
+- Support for scheduled/recurring tasks
+- Handle task dependencies (tasks that must complete before others)
+- Implement rate limiting per user/account
+- Support distribution across multiple servers (future)
+
+### Task Processor
+- Process tasks asynchronously using background processing
+- Implement timeout handling for long-running tasks
+- Create checkpoint system for resumable tasks
+- Record detailed logs of task execution
+- Handle graceful failure and recovery
+
+### Task Templates
+- Allow saving task configurations as templates
+- Support for organizational default templates
+- Enable sharing templates between users
+- Implement template versioning
+- Support for template categories
+
+## Extension Points
+- Task definition hooks
+- Pre-processing filters
+- Post-processing actions
+- Status transition events
+- Results formatting
+- Error handling callbacks
+
+
+

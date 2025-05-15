@@ -1,0 +1,31 @@
+---
+description: This rule provides an overview of the Ryvr AI Platform architecture and purpose. Reference this rule when you need to understand the high-level system components and development approach.
+globs: 
+alwaysApply: false
+---
+# Ryvr AI Platform - Project Overview
+
+> [!AGENT_REQUEST]
+> This rule provides an overview of the Ryvr AI Platform architecture and purpose. Reference this rule when you need to understand the high-level system components and development approach.
+
+## Core Purpose
+Ryvr is a digital agency automation platform that:
+- Leverages OpenAI and DataForSEO APIs to automate agency tasks
+- Allows small businesses to scale without hiring additional staff
+- Provides a comprehensive set of SEO and PPC automation tools
+- Serves as both an agency tool and a client-facing SaaS
+
+## Key Components
+- **Parent Platform**: WordPress multisite with Bricks Builder frontend
+- **Child Plugin**: WordPress plugins for client sites
+- **Core Integrations**: OpenAI API, DataForSEO API
+- **Future Integrations**: Google products, social media platforms, email services
+
+## Development Approach
+- Built on WordPress with PHP, JS, HTML, and CSS
+- Hosted on Vultr with CyberPanel
+- Modular architecture for easy extensibility
+- Phased development starting with core SEO and PPC features
+
+
+

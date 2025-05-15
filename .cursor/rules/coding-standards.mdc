@@ -1,0 +1,89 @@
+---
+description: This rule defines coding standards and conventions for the Ryvr AI Platform. Reference this rule when writing or reviewing code to ensure consistency and quality across the codebase. These standards apply to all PHP, JavaScript, database interactions, and security practices.
+globs: 
+alwaysApply: false
+---
+# Coding Standards
+
+> [!AGENT_REQUEST]
+> This rule defines coding standards and conventions for the Ryvr AI Platform. Reference this rule when writing or reviewing code to ensure consistency and quality across the codebase. These standards apply to all PHP, JavaScript, database interactions, and security practices.
+
+## PHP Standards
+
+### General Guidelines
+- Follow PSR-12 coding standards
+- Use PHP 7.4+ features where available
+- Document all classes, methods, and functions with PHPDoc
+- Use type hints for parameters and return types
+- Implement PHP_CodeSniffer for automated standards checking
+
+### WordPress Integration
+- Follow WordPress coding standards for plugin components
+- Use WordPress hooks and filters for extensibility
+- Create proper plugin header documentation
+- Use WordPress database functions with prepared statements
+- Implement proper sanitization and validation
+
+### Object-Oriented Approach
+- Use namespaces to organize code
+- Create interfaces for all major components
+- Implement dependency injection where appropriate
+- Use abstract classes for common functionality
+- Follow SOLID principles
+
+## JavaScript Standards
+
+### General Guidelines
+- Follow Airbnb JavaScript Style Guide
+- Use ES6+ features where possible
+- Document using JSDoc
+- Implement ESLint for code quality
+
+### Front-End Development
+- Use vanilla JS where possible, minimize dependencies
+- Implement module pattern for organization
+- Standardize AJAX request handling
+- Follow progressive enhancement principles
+- Ensure accessibility compliance
+
+## Database Guidelines
+
+### Table Structure
+- Use prefix `ryvr_` for all tables
+- Document all tables and columns
+- Implement foreign key constraints where appropriate
+- Use appropriate data types and indices
+- Create database upgrade procedures for version changes
+
+### Query Standards
+- Use prepared statements for all queries
+- Implement query caching where appropriate
+- Create abstraction for complex queries
+- Add query logging for performance monitoring
+- Follow WordPress standards when using wpdb
+
+## Security Practices
+
+### Input Handling
+- Validate all inputs server-side
+- Sanitize output appropriately for context
+- Implement CSRF protection
+- Use nonces for form submissions
+- Escape SQL, HTML, JavaScript, and attributes
+
+### Authentication & Authorization
+- Follow WordPress capabilities model
+- Implement role-based access control
+- Use secure password handling
+- Create proper session management
+- Implement JWT for API authentication
+
+## Testing Standards
+- Implement unit tests for all core functionality
+- Create integration tests for API interactions
+- Build end-to-end tests for critical workflows
+- Document testing procedures
+- Maintain test coverage reports
+
+
+

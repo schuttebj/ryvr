@@ -1,0 +1,430 @@
+/**
+ * Ryvr AI Platform Admin Styles
+ */
+
+/* Global Styles */
+.ryvr-dashboard,
+.ryvr-new-task,
+.ryvr-tasks,
+.ryvr-credits,
+.ryvr-settings {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Credit Display */
+.ryvr-dashboard-credit-balance,
+.ryvr-credit-info {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-left: 4px solid #2271b1;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    margin-bottom: 20px;
+    padding: 15px;
+}
+
+.ryvr-credit-count {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 10px 0;
+    color: #2271b1;
+}
+
+/* Dashboard */
+.ryvr-dashboard-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.ryvr-dashboard-credit-balance,
+.ryvr-dashboard-usage {
+    flex: 1;
+    min-width: 300px;
+}
+
+.ryvr-usage-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.ryvr-usage-stat {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.ryvr-usage-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.ryvr-usage-value {
+    font-size: 18px;
+    color: #2271b1;
+}
+
+.ryvr-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.ryvr-quick-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 15px;
+    width: 120px;
+    height: 120px;
+    text-align: center;
+    transition: all 0.2s ease;
+    color: #2271b1;
+}
+
+.ryvr-quick-action:hover {
+    background: #f0f6fc;
+    border-color: #2271b1;
+}
+
+.ryvr-quick-action .dashicons {
+    font-size: 30px;
+    width: 30px;
+    height: 30px;
+    margin-bottom: 10px;
+}
+
+.ryvr-quick-action-label {
+    display: block;
+    font-weight: 600;
+}
+
+/* Task Types Grid */
+.ryvr-task-types-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.ryvr-task-type-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 20px;
+    transition: all 0.2s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.ryvr-task-type-card:hover,
+.ryvr-task-type-card.selected {
+    border-color: #2271b1;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.ryvr-task-type-card.selected {
+    background: #f0f6fc;
+}
+
+.ryvr-task-type-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.ryvr-task-type-header .dashicons {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    color: #2271b1;
+}
+
+.ryvr-task-type-header h3 {
+    margin: 0;
+    padding: 0;
+}
+
+.ryvr-task-type-description {
+    margin-bottom: 15px;
+}
+
+.ryvr-task-type-credits {
+    color: #2271b1;
+    font-weight: 600;
+}
+
+.ryvr-task-type-cost {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #2271b1;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 10px;
+}
+
+/* Task Status */
+.ryvr-task-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-draft {
+    background: #f0f0f1;
+    color: #50575e;
+}
+
+.status-pending {
+    background: #f0f6fc;
+    color: #2271b1;
+}
+
+.status-approval {
+    background: #fcf9e8;
+    color: #996800;
+}
+
+.status-processing {
+    background: #fcf9e8;
+    color: #996800;
+    animation: processing-pulse 2s infinite;
+}
+
+@keyframes processing-pulse {
+    0% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.7;
+    }
+}
+
+.status-completed {
+    background: #edfaef;
+    color: #008a20;
+}
+
+.status-failed {
+    background: #fcf0f1;
+    color: #d63638;
+}
+
+.status-canceled {
+    background: #f0f0f1;
+    color: #50575e;
+}
+
+/* Task Form */
+.ryvr-form-section {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.ryvr-task-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.ryvr-form-field {
+    margin-bottom: 20px;
+}
+
+.ryvr-form-field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.ryvr-form-submit {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e5e5;
+}
+
+.ryvr-credits-required {
+    font-weight: 600;
+    color: #2271b1;
+}
+
+/* Task View */
+.ryvr-task-view {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    padding: 20px;
+}
+
+.ryvr-task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.ryvr-task-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.ryvr-task-info-item {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.ryvr-task-info-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.ryvr-task-content {
+    margin-bottom: 20px;
+}
+
+.ryvr-task-result {
+    background: #f9f9f9;
+    border: 1px solid #e5e5e5;
+    padding: 20px;
+    margin-bottom: 20px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.ryvr-task-result pre {
+    white-space: pre-wrap;
+}
+
+.ryvr-task-logs {
+    background: #f9f9f9;
+    border: 1px solid #e5e5e5;
+    padding: 20px;
+    margin-bottom: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.ryvr-log-entry {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.ryvr-log-info {
+    color: #2271b1;
+}
+
+.ryvr-log-warning {
+    color: #996800;
+}
+
+.ryvr-log-error {
+    color: #d63638;
+}
+
+.ryvr-log-timestamp {
+    font-size: 12px;
+    color: #50575e;
+}
+
+/* Task Response */
+.ryvr-task-response {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.ryvr-task-response-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Responsive */
+@media screen and (max-width: 782px) {
+    .ryvr-dashboard-header {
+        flex-direction: column;
+    }
+    
+    .ryvr-task-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .ryvr-task-header .button {
+        margin-top: 10px;
+    }
+    
+    .ryvr-form-submit {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .ryvr-form-submit button {
+        margin-top: 10px;
+    }
+}
+
+/* Client styles */
+.ryvr-clients-widget {
+    margin-top: 20px;
+}
+
+.ryvr-clients-list {
+    margin-bottom: 15px;
+}
+
+.ryvr-api-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-right: 5px;
+    font-size: 12px;
+}
+
+.ryvr-api-active {
+    background-color: #dff0d8;
+    color: #3c763d;
+}
+
+.ryvr-api-inactive {
+    background-color: #f2dede;
+    color: #a94442;
+}
+
+/* Task client dropdown */
+.ryvr-client-select {
+    width: 100%;
+    max-width: 400px;
+} 
