@@ -79,7 +79,7 @@ class Admin {
         add_menu_page(
             __( 'Ryvr AI Platform', 'ryvr-ai' ),
             __( 'Ryvr AI', 'ryvr-ai' ),
-            'edit_posts',
+            'read',
             'ryvr-ai',
             [ $this, 'render_dashboard_page' ],
             'dashicons-chart-area',
@@ -91,7 +91,7 @@ class Admin {
             'ryvr-ai',
             __( 'Dashboard', 'ryvr-ai' ),
             __( 'Dashboard', 'ryvr-ai' ),
-            'edit_posts',
+            'read',
             'ryvr-ai',
             [ $this, 'render_dashboard_page' ]
         );
@@ -101,7 +101,7 @@ class Admin {
             'ryvr-ai',
             __( 'Tasks', 'ryvr-ai' ),
             __( 'Tasks', 'ryvr-ai' ),
-            'edit_posts',
+            'read',
             'ryvr-ai-tasks',
             [ $this, 'render_tasks_page' ]
         );
@@ -111,7 +111,7 @@ class Admin {
             'ryvr-ai',
             __( 'New Task', 'ryvr-ai' ),
             __( 'New Task', 'ryvr-ai' ),
-            'edit_posts',
+            'read',
             'ryvr-ai-new-task',
             [ $this, 'render_new_task_page' ]
         );
@@ -121,7 +121,7 @@ class Admin {
             'ryvr-ai',
             __( 'Credits', 'ryvr-ai' ),
             __( 'Credits', 'ryvr-ai' ),
-            'edit_posts',
+            'read',
             'ryvr-ai-credits',
             [ $this, 'render_credits_page' ]
         );

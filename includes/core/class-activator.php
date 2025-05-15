@@ -22,30 +22,30 @@ namespace Ryvr\Core;
 class Activator {
 
     /**
-     * Plugin activation tasks.
+     * Run activation tasks.
      *
      * This method is called when the plugin is activated.
-     * It creates the necessary database tables, sets up default options,
-     * and performs other activation tasks.
      *
      * @return void
      */
     public static function activate() {
-        // Create database tables.
+        error_log('Ryvr DEBUG: Plugin activation started');
+
         self::create_database_tables();
-
-        // Set up default options.
-        self::set_default_options();
-
-        // Set version.
-        update_option( 'ryvr_version', RYVR_VERSION );
-        update_option( 'ryvr_db_version', RYVR_DB_VERSION );
-
-        // Create necessary directories.
-        self::create_directories();
-
-        // Flush rewrite rules.
+        self::create_admin_user_role();
+        self::create_client_user_role();
+        
+        // Add default options.
+        add_option( 'ryvr_db_version', RYVR_DB_VERSION );
+        add_option( 'ryvr_log_level', 'info' );
+        add_option( 'ryvr_debug_mode', false );
+        add_option( 'ryvr_credits_per_task', 5 );
+        add_option( 'ryvr_default_task_priority', 50 );
+        
+        // Flush rewrite rules to enable any custom post types and endpoints.
         flush_rewrite_rules();
+        
+        error_log('Ryvr DEBUG: Plugin activation completed');
     }
 
     /**
