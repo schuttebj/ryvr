@@ -11,20 +11,10 @@
 namespace Ryvr\Benchmarks;
 
 use Ryvr\Database\Database_Manager;
-use Ryvr\API\Services\DataForSEO_Service;
 use Exception;
 
-// Create a wrapper class for DataForSEO_Service with the expected namespace
-if (!class_exists('\\Ryvr\\API\\DataForSEO_Service', false)) {
-    namespace Ryvr\API;
-    
-    /**
-     * Legacy adapter for DataForSEO_Service
-     */
-    class DataForSEO_Service extends \Ryvr\API\Services\DataForSEO_Service {}
-    
-    namespace Ryvr\Benchmarks;
-}
+// Create a local alias to use the correct class
+use Ryvr\API\Services\DataForSEO_Service;
 
 /**
  * The Benchmark Manager class.
@@ -48,7 +38,7 @@ class Benchmark_Manager {
     /**
      * DataForSEO service instance.
      *
-     * @var DataForSEO_Service
+     * @var object
      */
     private $dataforseo;
 
@@ -100,10 +90,10 @@ class Benchmark_Manager {
      * Initialize the class.
      *
      * @param Database_Manager    $db_manager Database manager instance.
-     * @param DataForSEO_Service  $dataforseo DataForSEO service instance.
+     * @param object              $dataforseo DataForSEO service instance.
      * @return void
      */
-    public function init( Database_Manager $db_manager, DataForSEO_Service $dataforseo = null ) {
+    public function init( Database_Manager $db_manager, $dataforseo = null ) {
         $this->db_manager = $db_manager;
         $this->dataforseo = $dataforseo;
         $this->benchmarks_table = $this->db_manager->get_table( 'benchmarks' );

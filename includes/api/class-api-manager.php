@@ -47,10 +47,8 @@ class API_Manager {
         require_once RYVR_INCLUDES_DIR . 'api/services/class-dataforseo-service.php';
         require_once RYVR_INCLUDES_DIR . 'api/services/class-openai-service.php';
         
-        // Create an alias for backward compatibility - after the file is included
-        if (!class_exists('\\Ryvr\\API\\DataForSEO_Service')) {
-            class_alias('\\Ryvr\\API\\Services\\DataForSEO_Service', '\\Ryvr\\API\\DataForSEO_Service');
-        }
+        // Load the adapter for backward compatibility
+        require_once RYVR_INCLUDES_DIR . 'api/class-dataforseo-service-adapter.php';
         
         // Register services.
         $this->register_service( 'dataforseo', new Services\DataForSEO_Service() );
