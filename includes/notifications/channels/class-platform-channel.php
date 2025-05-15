@@ -80,7 +80,7 @@ class Platform_Channel {
         
         $count = $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT COUNT(*) FROM $table_name WHERE user_id = %d AND read = 0",
+                "SELECT COUNT(*) FROM $table_name WHERE user_id = %d AND `read` = 0",
                 $user_id
             )
         );
@@ -104,7 +104,7 @@ class Platform_Channel {
         $where = $wpdb->prepare('WHERE user_id = %d', $user_id);
         
         if ($unread_only) {
-            $where .= ' AND read = 0';
+            $where .= ' AND `read` = 0';
         }
         
         $limit_sql = $limit > 0 ? $wpdb->prepare('LIMIT %d', $limit) : '';

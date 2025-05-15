@@ -3,7 +3,7 @@
  * Plugin Name: Ryvr AI Platform
  * Plugin URI: https://ryvr.ai
  * Description: Digital agency automation platform leveraging OpenAI and DataForSEO APIs to automate SEO, PPC, and content tasks.
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: Ryvr
  * Author URI: https://ryvr.ai
  * Text Domain: ryvr-ai
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'RYVR_VERSION', '1.0.3' );
+define( 'RYVR_VERSION', '1.0.4' );
 define( 'RYVR_DB_VERSION', '1.0.0' );
 define( 'RYVR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'RYVR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

@@ -220,12 +220,12 @@ class Database_Manager {
             template_id varchar(50) NOT NULL,
             data longtext NULL,
             channels longtext NULL,
-            read tinyint(1) NOT NULL DEFAULT 0,
+            `read` tinyint(1) NOT NULL DEFAULT 0,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
             KEY user_id (user_id),
             KEY template_id (template_id),
-            KEY read (read),
+            KEY `read` (`read`),
             KEY created_at (created_at)
         ) $charset_collate;";
         
@@ -238,11 +238,11 @@ class Database_Manager {
             title varchar(255) NOT NULL,
             message text NOT NULL,
             data longtext NULL,
-            read tinyint(1) NOT NULL DEFAULT 0,
+            `read` tinyint(1) NOT NULL DEFAULT 0,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
             KEY user_id (user_id),
-            KEY read (read),
+            KEY `read` (`read`),
             KEY created_at (created_at)
         ) $charset_collate;";
         
@@ -390,12 +390,12 @@ class Database_Manager {
             template_id varchar(50) NOT NULL,
             data longtext NULL,
             channels longtext NULL,
-            read tinyint(1) NOT NULL DEFAULT 0,
+            `read` tinyint(1) NOT NULL DEFAULT 0,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
             KEY user_id (user_id),
             KEY template_id (template_id),
-            KEY read (read),
+            KEY `read` (`read`),
             KEY created_at (created_at)
         ) $charset_collate;";
         
@@ -408,11 +408,11 @@ class Database_Manager {
             title varchar(255) NOT NULL,
             message text NOT NULL,
             data longtext NULL,
-            read tinyint(1) NOT NULL DEFAULT 0,
+            `read` tinyint(1) NOT NULL DEFAULT 0,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
             KEY user_id (user_id),
-            KEY read (read),
+            KEY `read` (`read`),
             KEY created_at (created_at)
         ) $charset_collate;";
         

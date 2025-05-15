@@ -60,7 +60,7 @@ class Notifications_Page {
      */
     public function register_menu() {
         add_submenu_page(
-            'ryvr-dashboard',
+            'ryvr-ai-dashboard',
             __('Notifications', 'ryvr-ai'),
             __('Notifications', 'ryvr-ai'),
             'edit_posts',
@@ -77,16 +77,16 @@ class Notifications_Page {
     public function modify_menu_title() {
         global $submenu;
         
-        if (!isset($submenu['ryvr-dashboard'])) {
+        if (!isset($submenu['ryvr-ai-dashboard'])) {
             return;
         }
         
         $unread_count = $this->get_unread_notification_count();
         
         if ($unread_count > 0) {
-            foreach ($submenu['ryvr-dashboard'] as $key => $item) {
+            foreach ($submenu['ryvr-ai-dashboard'] as $key => $item) {
                 if ($item[2] === 'ryvr-notifications') {
-                    $submenu['ryvr-dashboard'][$key][0] = sprintf(
+                    $submenu['ryvr-ai-dashboard'][$key][0] = sprintf(
                         __('Notifications %s', 'ryvr-ai'),
                         '<span class="update-plugins count-' . $unread_count . '"><span class="plugin-count">' . $unread_count . '</span></span>'
                     );
