@@ -3,7 +3,7 @@
  * Plugin Name: Ryvr AI Platform
  * Plugin URI: https://ryvr.ai
  * Description: Digital agency automation platform leveraging OpenAI and DataForSEO APIs to automate SEO, PPC, and content tasks.
- * Version: 1.0.7
+ * Version: 1.0.8
  * Author: Ryvr
  * Author URI: https://ryvr.ai
  * Text Domain: ryvr-ai
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'RYVR_VERSION', '1.0.7' );
+define( 'RYVR_VERSION', '1.0.8' );
 define( 'RYVR_DB_VERSION', '1.0.0' );
 define( 'RYVR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'RYVR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -332,6 +332,64 @@ function run_ryvr_ai_platform() {
     // Initialize the main plugin class - this will set up lazy loading
     ryvr();
 }
+
+/**
+ * Add a direct menu item for debugging (to see if admin menu works at all)
+ */
+function ryvr_add_direct_debug_menu() {
+    error_log('Ryvr DEBUG: Direct menu registration function called');
+    
+    // Check if admin class is available
+    if (class_exists('\\Ryvr\\Admin\\Admin')) {
+        error_log('Ryvr DEBUG: Admin class exists');
+    } else {
+        error_log('Ryvr DEBUG: Admin class does NOT exist');
+    }
+    
+    // Add a direct menu item
+    add_menu_page(
+        'Ryvr Debug',
+        'Ryvr Debug',
+        'read',
+        'ryvr-debug',
+        'ryvr_render_debug_page',
+        'dashicons-buddicons-activity',
+        35
+    );
+}
+
+/**
+ * Render a simple debug page
+ */
+function ryvr_render_debug_page() {
+    echo '<div class="wrap">';
+    echo '<h1>Ryvr Debug Page</h1>';
+    echo '<p>This is a direct debug page to check if menu items work.</p>';
+    
+    // Show plugin info
+    echo '<h2>Plugin Info</h2>';
+    echo '<ul>';
+    echo '<li>Version: ' . RYVR_VERSION . '</li>';
+    echo '<li>DB Version: ' . RYVR_DB_VERSION . '</li>';
+    echo '<li>Plugin Path: ' . RYVR_PLUGIN_DIR . '</li>';
+    echo '</ul>';
+    
+    // Show user info
+    $current_user = wp_get_current_user();
+    echo '<h2>User Info</h2>';
+    echo '<ul>';
+    echo '<li>User ID: ' . $current_user->ID . '</li>';
+    echo '<li>Username: ' . $current_user->user_login . '</li>';
+    echo '<li>Roles: ' . implode(', ', $current_user->roles) . '</li>';
+    echo '<li>Has edit_posts: ' . (current_user_can('edit_posts') ? 'Yes' : 'No') . '</li>';
+    echo '<li>Has manage_options: ' . (current_user_can('manage_options') ? 'Yes' : 'No') . '</li>';
+    echo '</ul>';
+    
+    echo '</div>';
+}
+
+// Add our direct debug menu
+add_action('admin_menu', 'ryvr_add_direct_debug_menu');
 
 // Register activation, deactivation, and uninstallation hooks
 register_activation_hook( __FILE__, 'activate_ryvr_ai_platform' );

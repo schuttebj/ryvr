@@ -42,6 +42,9 @@ class Activator {
         add_option( 'ryvr_credits_per_task', 5 );
         add_option( 'ryvr_default_task_priority', 50 );
         
+        // Create necessary directories.
+        self::create_directories();
+        
         // Flush rewrite rules to enable any custom post types and endpoints.
         flush_rewrite_rules();
         
@@ -122,5 +125,27 @@ class Activator {
             $index_content = "<?php\n// Silence is golden.";
             file_put_contents( $index_file, $index_content );
         }
+    }
+
+    /**
+     * Create admin user role.
+     *
+     * @return void
+     */
+    private static function create_admin_user_role() {
+        // For now, just log that we're skipping this
+        error_log('Ryvr DEBUG: create_admin_user_role method called but not fully implemented');
+        // In a real implementation, this would create custom roles with specific capabilities
+    }
+
+    /**
+     * Create client user role.
+     *
+     * @return void
+     */
+    private static function create_client_user_role() {
+        // For now, just log that we're skipping this
+        error_log('Ryvr DEBUG: create_client_user_role method called but not fully implemented');
+        // In a real implementation, this would create custom roles with specific capabilities
     }
 } 
