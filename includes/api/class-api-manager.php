@@ -43,24 +43,31 @@ class API_Manager {
      * @return void
      */
     private function register_services() {
-        // Include API service classes.
-        require_once RYVR_INCLUDES_DIR . 'api/services/class-dataforseo-service.php';
-        require_once RYVR_INCLUDES_DIR . 'api/services/class-openai-service.php';
-        
-        // Load the adapter for backward compatibility
-        require_once RYVR_INCLUDES_DIR . 'api/class-dataforseo-service-adapter.php';
-        
-        // Register services.
-        $this->register_service( 'dataforseo', new Services\DataForSEO_Service() );
-        $this->register_service( 'openai', new Services\OpenAI_Service() );
-        
-        // Initialize services.
-        foreach ( $this->services as $service ) {
-            $service->init();
+        // Only include files if they're not already loaded
+        if (!class_exists('\\Ryvr\\API\\Services\\DataForSEO_Service')) {
+            require_once RYVR_INCLUDES_DIR . 'api/services/class-dataforseo-service.php';
         }
         
-        // Allow other plugins to register API services.
-        do_action( 'ryvr_register_api_services', $this );
+        if (!class_exists('\\Ryvr\\API\\Services\\OpenAI_Service')) {
+            require_once RYVR_INCLUDES_DIR . 'api/services/class-openai-service.php';
+        }
+        
+        // Register services - use a try/catch to handle potential errors
+        try {
+            $this->register_service('dataforseo', new Services\DataForSEO_Service());
+            $this->register_service('openai', new Services\OpenAI_Service());
+            
+            // Initialize services.
+            foreach ($this->services as $service) {
+                $service->init();
+            }
+            
+            // Allow other plugins to register API services.
+            do_action('ryvr_register_api_services', $this);
+        } catch (\Exception $e) {
+            // Log any errors for debugging
+            error_log('Ryvr ERROR: Failed to register API services: ' . $e->getMessage());
+        }
     }
 
     /**

@@ -201,6 +201,9 @@ final class Ryvr_AI_Platform {
         
         // Load only essential classes first
         require_once RYVR_INCLUDES_DIR . 'api/class-api-manager.php';
+        require_once RYVR_INCLUDES_DIR . 'api/class-api-service.php';
+        require_once RYVR_INCLUDES_DIR . 'api/abstract-class-api-service.php';
+        require_once RYVR_INCLUDES_DIR . 'api/class-api-cache.php';
         require_once RYVR_INCLUDES_DIR . 'admin/class-admin.php';
         
         // Initialize only essential components (API and Admin)
@@ -214,9 +217,6 @@ final class Ryvr_AI_Platform {
         // Defer loading other components to admin_init 
         add_action('admin_init', function() {
             // Load additional required files on demand
-            require_once RYVR_INCLUDES_DIR . 'api/class-api-service.php';
-            require_once RYVR_INCLUDES_DIR . 'api/class-api-cache.php';
-            require_once RYVR_INCLUDES_DIR . 'api/abstract-class-api-service.php';
             require_once RYVR_INCLUDES_DIR . 'task-engine/class-task-engine.php';
             require_once RYVR_INCLUDES_DIR . 'admin/class-debug-page.php';
             require_once RYVR_INCLUDES_DIR . 'admin/class-client-manager.php';

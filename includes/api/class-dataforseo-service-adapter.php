@@ -24,7 +24,42 @@ require_once RYVR_INCLUDES_DIR . 'api/services/class-dataforseo-service.php';
  * @package    Ryvr
  * @subpackage Ryvr/API
  */
-class DataForSEO_Service extends API_Service {
+class DataForSEO_Service {
+    /**
+     * Service name
+     * 
+     * @var string
+     */
+    protected $service_name = 'dataforseo';
+    
+    /**
+     * API key (username for DataForSEO)
+     * 
+     * @var string
+     */
+    protected $api_key;
+    
+    /**
+     * API secret (password for DataForSEO)
+     * 
+     * @var string
+     */
+    protected $api_secret;
+    
+    /**
+     * API base URL
+     * 
+     * @var string
+     */
+    protected $api_base_url = 'https://api.dataforseo.com/v3';
+    
+    /**
+     * Whether sandbox mode is enabled
+     * 
+     * @var bool
+     */
+    protected $sandbox_mode = false;
+    
     /**
      * The actual service instance
      * 
@@ -41,9 +76,19 @@ class DataForSEO_Service extends API_Service {
      * @param string           $api_key    API key (username for DataForSEO).
      * @param string           $api_secret API secret (password for DataForSEO).
      */
-    public function __construct($db_manager, $cache, $user_id = null, $api_key = null, $api_secret = null) {
-        $this->service_name = 'dataforseo';
-        parent::__construct($db_manager, $cache, $user_id, $api_key, $api_secret);
+    public function __construct($db_manager = null, $cache = null, $user_id = null, $api_key = null, $api_secret = null) {
+        // Set credentials if provided
+        if ($api_key && $api_secret) {
+            $this->api_key = $api_key;
+            $this->api_secret = $api_secret;
+        } else {
+            // Try to get from options
+            $this->api_key = get_option('ryvr_dataforseo_api_login', '');
+            $this->api_secret = get_option('ryvr_dataforseo_api_password', '');
+        }
+        
+        // Set sandbox mode based on option
+        $this->sandbox_mode = (bool) get_option('ryvr_api_sandbox_mode', false);
         
         // Create the actual service instance
         $this->service = new Services\DataForSEO_Service();
@@ -51,17 +96,29 @@ class DataForSEO_Service extends API_Service {
         // Initialize the service
         $this->service->init();
         
-        // Set credentials if provided
+        // Set credentials in options for consistency
         if ($api_key && $api_secret) {
-            // Store them in the original format for API_Service compatibility
-            $this->api_key = $api_key;
-            $this->api_secret = $api_secret;
-            
-            // Set in the actual service
-            // Note: DataForSEO uses username/password terminology
             update_option('ryvr_dataforseo_api_login', $api_key);
             update_option('ryvr_dataforseo_api_password', $api_secret);
         }
+    }
+    
+    /**
+     * Initialize the service.
+     *
+     * @return void
+     */
+    public function init() {
+        // Already initialized in constructor
+    }
+    
+    /**
+     * Check if the service is configured.
+     *
+     * @return bool Whether the service is configured.
+     */
+    public function is_configured() {
+        return !empty($this->api_key) && !empty($this->api_secret);
     }
     
     /**
@@ -76,45 +133,25 @@ class DataForSEO_Service extends API_Service {
             return call_user_func_array([$this->service, $name], $arguments);
         }
         
-        // Fall back to parent methods
-        if (method_exists(parent::class, $name)) {
-            return call_user_func_array([parent::class, $name], $arguments);
-        }
-        
         trigger_error('Call to undefined method ' . __CLASS__ . '::' . $name . '()', E_USER_ERROR);
         return null;
     }
     
     /**
-     * Calculate credits used for an API request.
+     * Execute an API request.
      *
-     * @param string $endpoint API endpoint.
+     * @param string $endpoint Endpoint to call.
      * @param array  $params   Request parameters.
-     * @param array  $response Response data.
-     * @return float Credits used.
-     */
-    protected function calculate_credits_used($endpoint, $params, $response) {
-        // Default credit cost
-        $credits = 1;
-        
-        // If the response contains a cost field, use that
-        if (isset($response['cost'])) {
-            $credits = (float)$response['cost'];
-        }
-        
-        return $credits;
-    }
-    
-    /**
-     * Execute the actual API request.
-     *
-     * @param string $endpoint API endpoint.
-     * @param array  $params   Request parameters.
-     * @param string $method   HTTP method.
+     * @param string $method   HTTP method (GET, POST, etc.).
      * @return array Response data.
      */
-    protected function execute_request($endpoint, $params, $method) {
-        // Forward the request to the actual service
+    public function request($endpoint, $params = [], $method = 'POST') {
+        // Forward to the actual service if it has a suitable method
+        if (method_exists($this->service, 'make_request')) {
+            return $this->service->make_request($endpoint, $params, $method);
+        }
+        
+        // Fall back to a standard WordPress HTTP request
         $url = $this->api_base_url . '/' . ltrim($endpoint, '/');
         
         $args = [
@@ -133,12 +170,7 @@ class DataForSEO_Service extends API_Service {
             $args['body'] = wp_json_encode($params);
         }
         
-        // Forward to the service if it has a suitable method
-        if (method_exists($this->service, 'make_request')) {
-            return $this->service->make_request($endpoint, $params, $method);
-        }
-        
-        // Fall back to a standard WordPress HTTP request
+        // Make the request
         $response = wp_remote_request($url, $args);
         
         if (is_wp_error($response)) {
@@ -159,41 +191,22 @@ class DataForSEO_Service extends API_Service {
     }
     
     /**
-     * Generate a sandbox response for testing.
+     * Test the API connection.
      *
-     * @param string $endpoint API endpoint.
-     * @param array  $params   Request parameters.
-     * @param string $method   HTTP method.
-     * @return array Mock response data.
+     * @return bool|array
      */
-    protected function generate_sandbox_response($endpoint, $params, $method) {
+    public function test_connection() {
         // Forward to the service if it has a suitable method
         if (method_exists($this->service, 'test_connection')) {
             return $this->service->test_connection();
         }
         
-        // Default sandbox response
-        return [
-            'status_code' => 20000,
-            'status_message' => 'Sandbox mode: OK',
-            'time' => date('Y-m-d\TH:i:s\Z'),
-            'cost' => 0,
-            'tasks_count' => 1,
-            'tasks_error' => 0,
-            'tasks' => [
-                [
-                    'id' => 'sandbox-' . uniqid(),
-                    'status_code' => 20000,
-                    'status_message' => 'Sandbox data',
-                    'time' => date('Y-m-d\TH:i:s\Z'),
-                    'result' => [
-                        'sandbox' => true,
-                        'endpoint' => $endpoint,
-                        'method' => $method,
-                    ],
-                ],
-            ],
-            'sandbox' => true,
-        ];
+        // Default test connection logic
+        try {
+            $response = $this->request('app_info');
+            return $response;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 } 
