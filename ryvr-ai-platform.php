@@ -128,12 +128,14 @@ final class Ryvr_AI_Platform {
 
         // Initialize essential components - defer others until needed
         $this->init_essential_components();
+        
+        // Initialize admin components directly if in admin area
+        if (is_admin()) {
+            $this->init_admin_components();
+        }
 
         // Register hooks.
         $this->register_hooks();
-        
-        // Register admin-specific initialization to admin_init hook to defer loading
-        add_action('admin_init', [$this, 'init_admin_components']);
     }
 
     /**

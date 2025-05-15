@@ -173,6 +173,10 @@ class Notifications_Page {
      * @return void
      */
     public function render_page() {
+        // Check user permissions
+        if (!current_user_can('read')) {
+            wp_die(__('Sorry, you are not allowed to access this page.', 'ryvr-ai'));
+        }
         // Use template file instead of inline HTML
         require_once RYVR_TEMPLATES_DIR . 'admin/notifications.php';
     }
