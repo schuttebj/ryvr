@@ -287,21 +287,6 @@ final class Ryvr_AI_Platform {
     public function __wakeup() {
         // Prevent unserializing.
     }
-
-    /**
-     * Add plugin action links.
-     *
-     * @param array $links Default plugin action links.
-     * @return array Modified plugin action links.
-     */
-    public function add_plugin_action_links( $links ) {
-        $plugin_links = [
-            '<a href="' . admin_url( 'admin.php?page=ryvr-ai-settings' ) . '">' . __( 'Settings', 'ryvr-ai' ) . '</a>',
-            '<a href="' . admin_url( 'admin.php?page=ryvr-ai' ) . '">' . __( 'Dashboard', 'ryvr-ai' ) . '</a>',
-        ];
-        
-        return array_merge( $plugin_links, $links );
-    }
 }
 
 /**
@@ -475,10 +460,10 @@ function ryvr_render_debug_page() {
 }
 
 // Add our direct debug menu - keep this one for debugging
-add_action('admin_menu', 'ryvr_add_direct_debug_menu');
+// add_action('admin_menu', 'ryvr_add_direct_debug_menu');
 
 // Restore early admin initialization
-add_action('admin_menu', 'ryvr_init_admin_early', 5); // Priority 5 to run before normal menu items
+// add_action('admin_menu', 'ryvr_init_admin_early', 5); // Priority 5 to run before normal menu items
 
 // Register activation, deactivation, and uninstallation hooks
 register_activation_hook( __FILE__, 'activate_ryvr_ai_platform' );

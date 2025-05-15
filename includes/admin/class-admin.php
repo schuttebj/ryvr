@@ -65,20 +65,7 @@ class Admin {
      * @return void
      */
     public function register_admin_menu() {
-        // Debug output to check if this method is being called
-        error_log('Ryvr DEBUG: Admin::register_admin_menu() called - consolidated version');
-        
-        // Debug output for current user capabilities
-        $current_user = wp_get_current_user();
-        error_log('Ryvr DEBUG: Current user ID: ' . $current_user->ID);
-        error_log('Ryvr DEBUG: Current user login: ' . $current_user->user_login);
-        error_log('Ryvr DEBUG: Current user has edit_posts: ' . (current_user_can('edit_posts') ? 'yes' : 'no'));
-        error_log('Ryvr DEBUG: Current user has manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
-        
-        // Remove any existing menu
-        remove_menu_page('ryvr-ai-direct');
-        
-        // Main menu item with updated registration
+        // Main menu item
         add_menu_page(
             __( 'Ryvr AI Platform', 'ryvr-ai' ),
             __( 'Ryvr AI', 'ryvr-ai' ),
@@ -119,6 +106,26 @@ class Admin {
             [ $this, 'render_new_task_page' ]
         );
         
+        // Clients submenu - only show to admins/managers
+        add_submenu_page(
+            'ryvr-ai',
+            __( 'Clients', 'ryvr-ai' ),
+            __( 'Clients', 'ryvr-ai' ),
+            'manage_options',
+            'ryvr-ai-clients',
+            [ ryvr()->get_component('client_manager'), 'render_page' ]
+        );
+        
+        // Benchmarks submenu
+        add_submenu_page(
+            'ryvr-ai',
+            __( 'Benchmarks', 'ryvr-ai' ),
+            __( 'Benchmarks', 'ryvr-ai' ),
+            'read',
+            'ryvr-ai-benchmarks',
+            [ ryvr()->get_component('benchmark_manager'), 'render_page' ]
+        );
+        
         // Credits submenu
         add_submenu_page(
             'ryvr-ai',
@@ -127,6 +134,26 @@ class Admin {
             'read',
             'ryvr-ai-credits',
             [ $this, 'render_credits_page' ]
+        );
+        
+        // Notifications submenu
+        add_submenu_page(
+            'ryvr-ai',
+            __( 'Notifications', 'ryvr-ai' ),
+            __( 'Notifications', 'ryvr-ai' ),
+            'read',
+            'ryvr-ai-notifications',
+            [ $this->notifications_page, 'render_page' ]
+        );
+        
+        // Debug Logs submenu - only show to admins
+        add_submenu_page(
+            'ryvr-ai',
+            __( 'Debug Logs', 'ryvr-ai' ),
+            __( 'Debug Logs', 'ryvr-ai' ),
+            'manage_options',
+            'ryvr-ai-debug',
+            [ ryvr()->get_component('debug_page'), 'render_page' ]
         );
         
         // Settings submenu

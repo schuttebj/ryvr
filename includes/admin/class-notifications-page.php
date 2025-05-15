@@ -59,14 +59,15 @@ class Notifications_Page {
      * @return void
      */
     public function register_menu() {
-        add_submenu_page(
-            'ryvr-ai',
-            __('Notifications', 'ryvr-ai'),
-            __('Notifications', 'ryvr-ai'),
-            'read',
-            'ryvr-ai-notifications',
-            [$this, 'render_page']
-        );
+        // Comment out the register_menu method to prevent duplicate menu registration, since the main Admin class will handle it.
+        // add_submenu_page(
+        //     'ryvr-ai',
+        //     __('Notifications', 'ryvr-ai'),
+        //     __('Notifications', 'ryvr-ai'),
+        //     'read',
+        //     'ryvr-ai-notifications',
+        //     [$this, 'render_page']
+        // );
     }
 
     /**
