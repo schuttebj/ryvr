@@ -180,9 +180,9 @@ final class Ryvr_AI_Platform {
     public function init_admin_components() {
         // Only load these in admin area to save memory on frontend
         require_once RYVR_INCLUDES_DIR . 'api/class-api-manager.php';
-        require_once RYVR_INCLUDES_DIR . 'api/class-api-service.php';
-        require_once RYVR_INCLUDES_DIR . 'api/abstract-class-api-service.php';
+        require_once RYVR_INCLUDES_DIR . 'api/class-api-service.php';  // Main API_Service class first
         require_once RYVR_INCLUDES_DIR . 'api/class-api-cache.php';
+        require_once RYVR_INCLUDES_DIR . 'api/abstract-class-api-service.php';  // API_Service_Interface (renamed)
         
         // Load API service classes
         require_once RYVR_INCLUDES_DIR . 'api/services/class-dataforseo-service.php';
@@ -194,6 +194,7 @@ final class Ryvr_AI_Platform {
         require_once RYVR_INCLUDES_DIR . 'admin/class-debug-page.php';
         require_once RYVR_INCLUDES_DIR . 'admin/class-client-manager.php';
         require_once RYVR_INCLUDES_DIR . 'notifications/class-notification-manager.php';
+        require_once RYVR_INCLUDES_DIR . 'notifications/channels/class-platform-channel.php';
         require_once RYVR_INCLUDES_DIR . 'class-benchmark-manager.php';
         
         // Initialize admin components

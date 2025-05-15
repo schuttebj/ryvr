@@ -1,6 +1,6 @@
 <?php
 /**
- * The Abstract API Service class.
+ * The Abstract API Service Interface class.
  *
  * Defines the interface for API service implementations.
  *
@@ -11,7 +11,7 @@
 namespace Ryvr\API;
 
 /**
- * The Abstract API Service class.
+ * The Abstract API Service Interface class.
  *
  * This class defines the interface that all API service
  * implementations must follow.
@@ -19,7 +19,7 @@ namespace Ryvr\API;
  * @package    Ryvr
  * @subpackage Ryvr/API
  */
-abstract class API_Service {
+abstract class API_Service_Interface {
 
     /**
      * API service name.
