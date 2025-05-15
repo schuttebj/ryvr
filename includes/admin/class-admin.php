@@ -65,6 +65,16 @@ class Admin {
      * @return void
      */
     public function register_admin_menu() {
+        // Debug output to check if this method is being called
+        error_log('Ryvr DEBUG: Admin::register_admin_menu() called');
+        
+        // Debug output for current user capabilities
+        $current_user = wp_get_current_user();
+        error_log('Ryvr DEBUG: Current user ID: ' . $current_user->ID);
+        error_log('Ryvr DEBUG: Current user login: ' . $current_user->user_login);
+        error_log('Ryvr DEBUG: Current user has edit_posts: ' . (current_user_can('edit_posts') ? 'yes' : 'no'));
+        error_log('Ryvr DEBUG: Current user has manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
+        
         // Main menu item.
         add_menu_page(
             __( 'Ryvr AI Platform', 'ryvr-ai' ),
