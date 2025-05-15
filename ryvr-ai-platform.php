@@ -144,18 +144,18 @@ final class Ryvr_AI_Platform {
         require_once RYVR_INCLUDES_DIR . 'admin/class-admin.php';
         require_once RYVR_INCLUDES_DIR . 'admin/class-debug-page.php';
 
-        $this->admin = new Admin\Admin();
+        $this->admin = new \Ryvr\Admin\Admin();
         $this->components['admin'] = $this->admin;
         $this->admin->init();
         
         // Initialize debug page
-        $this->debug_page = new Admin\Debug_Page();
+        $this->debug_page = new \Ryvr\Admin\Debug_Page();
         $this->components['debug_page'] = $this->debug_page;
         $this->debug_page->init();
 
         // Load client manager
         require_once RYVR_INCLUDES_DIR . 'admin/class-client-manager.php';
-        $this->client_manager = new Admin\Client_Manager();
+        $this->client_manager = new \Ryvr\Admin\Client_Manager();
         $this->components['client_manager'] = $this->client_manager;
         $this->client_manager->init();
 
