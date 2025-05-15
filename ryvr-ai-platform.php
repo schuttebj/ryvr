@@ -14,36 +14,12 @@
  * @package Ryvr
  */
 
-// Increase memory limit
+// Increase memory limit - try maximum allowed
 ini_set('memory_limit', '1024M');
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
-}
-
-// Check if Complianz is active
-function ryvr_check_complianz_dependency() {
-    // Include plugin.php to use is_plugin_active
-    if ( ! function_exists( 'is_plugin_active' ) ) {
-        include_once ABSPATH . 'wp-admin/includes/plugin.php';
-    }
-    
-    if ( ! is_plugin_active( 'complianz-gdpr/complianz-gdpr.php' ) ) {
-        add_action( 'admin_notices', 'ryvr_complianz_missing_notice' );
-    }
-}
-add_action( 'admin_init', 'ryvr_check_complianz_dependency' );
-
-// Admin notice for missing Complianz
-function ryvr_complianz_missing_notice() {
-    if ( current_user_can( 'activate_plugins' ) ) {
-        ?>
-        <div class="notice notice-warning is-dismissible">
-            <p><?php _e( 'Ryvr AI Platform recommends Complianz GDPR/CCPA for complete compliance with privacy regulations. <a href="plugin-install.php?s=complianz&tab=search&type=term">Install Complianz</a> for full GDPR compliance.', 'ryvr-ai' ); ?></p>
-        </div>
-        <?php
-    }
 }
 
 // Define plugin constants.
@@ -61,6 +37,40 @@ define( 'RYVR_LOGS_DIR', RYVR_PLUGIN_DIR . 'logs/' );
 // Define debug constants
 define( 'RYVR_DEBUG', true );  // Enable debugging
 define( 'RYVR_DEBUG_TRACE', true );  // Enable stack traces for error logs
+
+// Check if Complianz is active - move this to init to avoid too early loading
+function ryvr_check_complianz_dependency() {
+    // Include plugin.php to use is_plugin_active
+    if ( ! function_exists( 'is_plugin_active' ) ) {
+        include_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+    
+    if ( ! is_plugin_active( 'complianz-gdpr/complianz-gdpr.php' ) ) {
+        add_action( 'admin_notices', 'ryvr_complianz_missing_notice' );
+    }
+}
+// Move to init instead of admin_init to ensure it runs at the right time
+add_action( 'init', 'ryvr_check_complianz_dependency', 20 );
+
+// Admin notice for missing Complianz
+function ryvr_complianz_missing_notice() {
+    if ( current_user_can( 'activate_plugins' ) ) {
+        ?>
+        <div class="notice notice-warning is-dismissible">
+            <p><?php _e( 'Ryvr AI Platform recommends Complianz GDPR/CCPA for complete compliance with privacy regulations. <a href="plugin-install.php?s=complianz&tab=search&type=term">Install Complianz</a> for full GDPR compliance.', 'ryvr-ai' ); ?></p>
+        </div>
+        <?php
+    }
+}
+
+/**
+ * Load plugin textdomain properly at the right time.
+ * Moving this to the init hook with priority 1 to ensure it loads at the right time.
+ */
+function ryvr_load_textdomain() {
+    load_plugin_textdomain( 'ryvr-ai', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+}
+add_action( 'init', 'ryvr_load_textdomain', 1 );
 
 /**
  * Class Ryvr_AI_Platform
@@ -113,23 +123,26 @@ final class Ryvr_AI_Platform {
      * @return void
      */
     private function init() {
-        // Load plugin files.
-        $this->load_files();
+        // Load core files only - essential for functioning
+        $this->load_core_files();
 
-        // Initialize components.
-        $this->init_components();
+        // Initialize essential components - defer others until needed
+        $this->init_essential_components();
 
         // Register hooks.
         $this->register_hooks();
+        
+        // Register admin-specific initialization to admin_init hook to defer loading
+        add_action('admin_init', [$this, 'init_admin_components']);
     }
 
     /**
-     * Load plugin files.
+     * Load core files that are always needed.
      *
      * @return void
      */
-    private function load_files() {
-        // Load core files.
+    private function load_core_files() {
+        // Load core functionality only
         require_once RYVR_INCLUDES_DIR . 'core/functions.php';
         require_once RYVR_INCLUDES_DIR . 'core/class-loader.php';
         require_once RYVR_INCLUDES_DIR . 'core/class-i18n.php';
@@ -137,63 +150,58 @@ final class Ryvr_AI_Platform {
         require_once RYVR_INCLUDES_DIR . 'core/class-deactivator.php';
         require_once RYVR_INCLUDES_DIR . 'core/debug.php';
 
-        // Load API files.
-        require_once RYVR_INCLUDES_DIR . 'api/class-api-manager.php';
-
-        // Load Task Engine files.
-        require_once RYVR_INCLUDES_DIR . 'task-engine/class-task-engine.php';
-
-        // Load Admin files.
-        require_once RYVR_INCLUDES_DIR . 'admin/class-admin.php';
-        require_once RYVR_INCLUDES_DIR . 'admin/class-debug-page.php';
-
-        $this->admin = new \Ryvr\Admin\Admin();
-        $this->components['admin'] = $this->admin;
-        $this->admin->init();
-        
-        // Initialize debug page
-        $this->debug_page = new \Ryvr\Admin\Debug_Page();
-        $this->components['debug_page'] = $this->debug_page;
-        $this->debug_page->init();
-
-        // Load client manager
-        require_once RYVR_INCLUDES_DIR . 'admin/class-client-manager.php';
-        $this->client_manager = new \Ryvr\Admin\Client_Manager();
-        $this->components['client_manager'] = $this->client_manager;
-        $this->client_manager->init();
-
-        // Load Database files.
+        // Load Database files (needed for basic functionality)
         require_once RYVR_INCLUDES_DIR . 'database/class-database-manager.php';
-        
-        // Load Notification files.
-        require_once RYVR_INCLUDES_DIR . 'notifications/class-notification-manager.php';
-        
-        // Load Benchmark files.
-        require_once RYVR_INCLUDES_DIR . 'class-benchmark-manager.php';
     }
-
+    
     /**
-     * Initialize components.
+     * Initialize essential components that are always needed.
      *
      * @return void
      */
-    private function init_components() {
-        // Create components.
+    private function init_essential_components() {
+        // Create only essential components
         $this->components['loader'] = new Ryvr\Core\Loader();
         $this->components['i18n'] = new Ryvr\Core\I18n();
+        $this->components['database_manager'] = new Ryvr\Database\Database_Manager();
+        
+        // Initialize only essential components
+        $this->components['database_manager']->init();
+        
+        // Don't initialize i18n here - we're using the separate function for textdomain loading
+    }
+    
+    /**
+     * Initialize admin components.
+     * This is deferred until admin_init to reduce memory usage on frontend requests.
+     *
+     * @return void
+     */
+    public function init_admin_components() {
+        // Only load these in admin area to save memory on frontend
+        require_once RYVR_INCLUDES_DIR . 'api/class-api-manager.php';
+        require_once RYVR_INCLUDES_DIR . 'task-engine/class-task-engine.php';
+        require_once RYVR_INCLUDES_DIR . 'admin/class-admin.php';
+        require_once RYVR_INCLUDES_DIR . 'admin/class-debug-page.php';
+        require_once RYVR_INCLUDES_DIR . 'admin/class-client-manager.php';
+        require_once RYVR_INCLUDES_DIR . 'notifications/class-notification-manager.php';
+        require_once RYVR_INCLUDES_DIR . 'class-benchmark-manager.php';
+        
+        // Initialize admin components
         $this->components['api_manager'] = new Ryvr\API\API_Manager();
         $this->components['task_engine'] = new Ryvr\Task_Engine\Task_Engine();
-        $this->components['admin'] = new Ryvr\Admin\Admin();
-        $this->components['database_manager'] = new Ryvr\Database\Database_Manager();
+        $this->components['admin'] = new \Ryvr\Admin\Admin();
+        $this->components['debug_page'] = new \Ryvr\Admin\Debug_Page();
+        $this->components['client_manager'] = new \Ryvr\Admin\Client_Manager();
         $this->components['notification_manager'] = new Ryvr\Notifications\Notification_Manager();
         $this->components['benchmark_manager'] = new Ryvr\Benchmarks\Benchmark_Manager();
-
-        // Initialize components.
-        $this->components['i18n']->init();
+        
+        // Initialize components
         $this->components['api_manager']->init();
         $this->components['task_engine']->init();
         $this->components['admin']->init();
-        $this->components['database_manager']->init();
+        $this->components['debug_page']->init();
+        $this->components['client_manager']->init();
         $this->components['notification_manager']->init();
         
         // Initialize benchmark manager with dependencies
@@ -209,20 +217,8 @@ final class Ryvr_AI_Platform {
      * @return void
      */
     private function register_hooks() {
-        // Core WordPress hooks.
-        add_action( 'plugins_loaded', [ $this, 'load_plugin_textdomain' ] );
-
         // Run loader.
         $this->components['loader']->run();
-    }
-
-    /**
-     * Load the plugin text domain for translation.
-     *
-     * @return void
-     */
-    public function load_plugin_textdomain() {
-        load_plugin_textdomain( 'ryvr-ai', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
     }
 
     /**
@@ -304,6 +300,8 @@ function activate_ryvr_ai_platform() {
 
 /**
  * The code that runs during plugin initialization.
+ * This is split into two parts - essential database updates happen first,
+ * and full plugin initialization happens after.
  */
 function init_ryvr_ai_platform() {
     // Include database manager file first
@@ -328,9 +326,10 @@ function deactivate_ryvr_ai_platform() {
 
 /**
  * The code that runs the main plugin functionality.
+ * This is intentionally kept as lightweight as possible.
  */
 function run_ryvr_ai_platform() {
-    // Initialize the main plugin class
+    // Initialize the main plugin class - this will set up lazy loading
     ryvr();
 }
 
@@ -339,5 +338,6 @@ register_activation_hook( __FILE__, 'activate_ryvr_ai_platform' );
 register_deactivation_hook( __FILE__, 'deactivate_ryvr_ai_platform' );
 
 // Initialize the plugin - run database update first, then initialize the main plugin
-add_action('plugins_loaded', 'init_ryvr_ai_platform', 5); // Lower priority number means it runs earlier
-add_action('plugins_loaded', 'run_ryvr_ai_platform', 10); // Default priority 
+// Using higher priority numbers to ensure it runs after other plugins
+add_action('plugins_loaded', 'init_ryvr_ai_platform', 15); 
+add_action('plugins_loaded', 'run_ryvr_ai_platform', 20); 
