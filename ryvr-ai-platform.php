@@ -71,6 +71,7 @@ function ryvr_load_textdomain() {
     load_plugin_textdomain( 'ryvr-ai', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
 add_action( 'init', 'ryvr_load_textdomain', 1 );
+add_action( 'plugins_loaded', 'ryvr_load_textdomain', 5 );
 
 /**
  * Class Ryvr_AI_Platform
@@ -180,47 +181,83 @@ final class Ryvr_AI_Platform {
      * @return void
      */
     public function init_admin_components() {
-        // Only load these in admin area to save memory on frontend
+        // Monitor memory usage and adjust if needed
+        $memory_limit = ini_get('memory_limit');
+        $memory_limit_bytes = $this->return_bytes($memory_limit);
+        
+        // If memory limit is low, try to increase it
+        if ($memory_limit_bytes < 256 * 1024 * 1024) {
+            ini_set('memory_limit', '256M');
+        }
+        
+        // Register error handler for memory exhaustion
+        register_shutdown_function(function() {
+            $error = error_get_last();
+            if ($error && strpos($error['message'], 'Allowed memory size') !== false) {
+                error_log('Ryvr ERROR: Memory exhaustion detected. Current limit: ' . ini_get('memory_limit'));
+                gc_collect_cycles(); // Force garbage collection
+            }
+        });
+        
+        // Load only essential classes first
         require_once RYVR_INCLUDES_DIR . 'api/class-api-manager.php';
-        require_once RYVR_INCLUDES_DIR . 'api/class-api-service.php';  // Main API_Service class first
-        require_once RYVR_INCLUDES_DIR . 'api/class-api-cache.php';
-        require_once RYVR_INCLUDES_DIR . 'api/abstract-class-api-service.php';  // API_Service_Interface (renamed)
-        
-        // Load API service classes
-        require_once RYVR_INCLUDES_DIR . 'api/services/class-dataforseo-service.php';
-        require_once RYVR_INCLUDES_DIR . 'api/class-dataforseo-service-adapter.php';
-        require_once RYVR_INCLUDES_DIR . 'api/services/class-openai-service.php';
-        
-        require_once RYVR_INCLUDES_DIR . 'task-engine/class-task-engine.php';
         require_once RYVR_INCLUDES_DIR . 'admin/class-admin.php';
-        require_once RYVR_INCLUDES_DIR . 'admin/class-debug-page.php';
-        require_once RYVR_INCLUDES_DIR . 'admin/class-client-manager.php';
-        require_once RYVR_INCLUDES_DIR . 'notifications/class-notification-manager.php';
-        require_once RYVR_INCLUDES_DIR . 'notifications/channels/class-platform-channel.php';
-        require_once RYVR_INCLUDES_DIR . 'class-benchmark-manager.php';
         
-        // Initialize admin components
+        // Initialize only essential components (API and Admin)
         $this->components['api_manager'] = new Ryvr\API\API_Manager();
-        $this->components['task_engine'] = new Ryvr\Task_Engine\Task_Engine();
         $this->components['admin'] = new \Ryvr\Admin\Admin();
-        $this->components['debug_page'] = new \Ryvr\Admin\Debug_Page();
-        $this->components['client_manager'] = new \Ryvr\Admin\Client_Manager();
-        $this->components['notification_manager'] = new Ryvr\Notifications\Notification_Manager();
-        $this->components['benchmark_manager'] = new Ryvr\Benchmarks\Benchmark_Manager();
         
-        // Initialize components
+        // Initialize these essential components
         $this->components['api_manager']->init();
-        $this->components['task_engine']->init();
         $this->components['admin']->init();
-        $this->components['debug_page']->init();
-        $this->components['client_manager']->init();
-        $this->components['notification_manager']->init();
         
-        // Initialize benchmark manager with dependencies
-        $this->components['benchmark_manager']->init(
-            $this->components['database_manager'],
-            $this->components['api_manager']->get_service('dataforseo')
-        );
+        // Defer loading other components to admin_init 
+        add_action('admin_init', function() {
+            // Load additional required files on demand
+            require_once RYVR_INCLUDES_DIR . 'api/class-api-service.php';
+            require_once RYVR_INCLUDES_DIR . 'api/class-api-cache.php';
+            require_once RYVR_INCLUDES_DIR . 'api/abstract-class-api-service.php';
+            require_once RYVR_INCLUDES_DIR . 'task-engine/class-task-engine.php';
+            require_once RYVR_INCLUDES_DIR . 'admin/class-debug-page.php';
+            require_once RYVR_INCLUDES_DIR . 'admin/class-client-manager.php';
+            require_once RYVR_INCLUDES_DIR . 'notifications/class-notification-manager.php';
+            require_once RYVR_INCLUDES_DIR . 'notifications/channels/class-platform-channel.php';
+            require_once RYVR_INCLUDES_DIR . 'class-benchmark-manager.php';
+            
+            // Now load API service files
+            require_once RYVR_INCLUDES_DIR . 'api/services/class-dataforseo-service.php';
+            require_once RYVR_INCLUDES_DIR . 'api/class-dataforseo-service-adapter.php';
+            require_once RYVR_INCLUDES_DIR . 'api/services/class-openai-service.php';
+            
+            // Initialize remaining components only if they haven't been initialized yet
+            if (!isset($this->components['task_engine'])) {
+                $this->components['task_engine'] = new Ryvr\Task_Engine\Task_Engine();
+                $this->components['task_engine']->init();
+            }
+            
+            if (!isset($this->components['debug_page'])) {
+                $this->components['debug_page'] = new \Ryvr\Admin\Debug_Page();
+                $this->components['debug_page']->init();
+            }
+            
+            if (!isset($this->components['client_manager'])) {
+                $this->components['client_manager'] = new \Ryvr\Admin\Client_Manager();
+                $this->components['client_manager']->init();
+            }
+            
+            if (!isset($this->components['notification_manager'])) {
+                $this->components['notification_manager'] = new Ryvr\Notifications\Notification_Manager();
+                $this->components['notification_manager']->init();
+            }
+            
+            if (!isset($this->components['benchmark_manager'])) {
+                $this->components['benchmark_manager'] = new Ryvr\Benchmarks\Benchmark_Manager();
+                $this->components['benchmark_manager']->init(
+                    $this->components['database_manager'],
+                    $this->components['api_manager']->get_service('dataforseo')
+                );
+            }
+        }, 20); // Lower priority to ensure it runs after other admin_init functions
     }
 
     /**
@@ -288,6 +325,26 @@ final class Ryvr_AI_Platform {
      */
     public function __wakeup() {
         // Prevent unserializing.
+    }
+
+    /**
+     * Helper function to convert memory limit strings to bytes
+     * 
+     * @param string $size_str Memory size string (e.g., '256M')
+     * @return int Size in bytes
+     */
+    private function return_bytes($size_str) {
+        $val = trim($size_str);
+        $last = strtolower($val[strlen($val)-1]);
+        $val = (int)$val;
+        
+        switch($last) {
+            case 'g': $val *= 1024;
+            case 'm': $val *= 1024;
+            case 'k': $val *= 1024;
+        }
+        
+        return $val;
     }
 }
 
@@ -395,70 +452,6 @@ function ryvr_add_direct_debug_menu() {
         'dashicons-buddicons-activity',
         35
     );
-}
-
-/**
- * Render a simple debug page
- */
-function ryvr_render_debug_page() {
-    echo '<div class="wrap">';
-    echo '<h1>Ryvr Debug Page</h1>';
-    echo '<p>This is a direct debug page to check if menu items work.</p>';
-    
-    // Show plugin info
-    echo '<h2>Plugin Info</h2>';
-    echo '<ul>';
-    echo '<li>Version: ' . RYVR_VERSION . '</li>';
-    echo '<li>DB Version: ' . RYVR_DB_VERSION . '</li>';
-    echo '<li>Plugin Path: ' . RYVR_PLUGIN_DIR . '</li>';
-    echo '</ul>';
-    
-    // Show user info
-    $current_user = wp_get_current_user();
-    echo '<h2>User Info</h2>';
-    echo '<ul>';
-    echo '<li>User ID: ' . $current_user->ID . '</li>';
-    echo '<li>Username: ' . $current_user->user_login . '</li>';
-    echo '<li>Roles: ' . implode(', ', $current_user->roles) . '</li>';
-    echo '<li>Has edit_posts: ' . (current_user_can('edit_posts') ? 'Yes' : 'No') . '</li>';
-    echo '<li>Has manage_options: ' . (current_user_can('manage_options') ? 'Yes' : 'No') . '</li>';
-    echo '</ul>';
-    
-    // Show admin class diagnostics
-    echo '<h2>Admin Class Diagnostics</h2>';
-    echo '<ul>';
-    echo '<li>Admin class exists: ' . (class_exists('\\Ryvr\\Admin\\Admin') ? 'Yes' : 'No') . '</li>';
-    
-    // Check if admin/class-admin.php file exists
-    $admin_file = RYVR_INCLUDES_DIR . 'admin/class-admin.php';
-    echo '<li>Admin file exists: ' . (file_exists($admin_file) ? 'Yes' : 'No') . ' (' . $admin_file . ')</li>';
-    
-    // Check if Ryvr components are initialized
-    $main_instance = ryvr();
-    $components = $main_instance->get_components();
-    echo '<li>Admin component initialized: ' . (isset($components['admin']) ? 'Yes' : 'No') . '</li>';
-    
-    // List all initialized components
-    echo '<li>Initialized components: ' . implode(', ', array_keys($components)) . '</li>';
-    echo '</ul>';
-    
-    // Try direct access to menu registration
-    echo '<h2>Try Admin Menu Registration</h2>';
-    echo '<p>Attempting to register admin menu directly:</p>';
-    try {
-        // Try loading the Admin class
-        if (!class_exists('\\Ryvr\\Admin\\Admin')) {
-            require_once RYVR_INCLUDES_DIR . 'admin/class-admin.php';
-        }
-        
-        $admin = new \Ryvr\Admin\Admin();
-        $admin->init();
-        echo '<p>Successfully loaded Admin class and called init()</p>';
-    } catch (Exception $e) {
-        echo '<p>Error: ' . $e->getMessage() . '</p>';
-    }
-    
-    echo '</div>';
 }
 
 // Add our direct debug menu - keep this one for debugging
