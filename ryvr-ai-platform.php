@@ -14,6 +14,9 @@
  * @package Ryvr
  */
 
+// Increase memory limit
+ini_set('memory_limit', '1024M');
+
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -294,6 +297,7 @@ function ryvr() {
  * This action is documented in includes/core/class-activator.php
  */
 function activate_ryvr_ai_platform() {
+    // Only load the activator class to reduce memory usage during activation
     require_once plugin_dir_path( __FILE__ ) . 'includes/core/class-activator.php';
     \Ryvr\Core\Activator::activate();
 }

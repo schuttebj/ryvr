@@ -57,18 +57,15 @@ class Activator {
      */
     private static function create_database_tables() {
         global $wpdb;
-
-        $charset_collate = $wpdb->get_charset_collate();
-
-        // Get the database manager instance.
-        $db_manager = ryvr()->get_component( 'db_manager' );
         
-        // If the database manager is not available, return early.
-        if ( ! $db_manager ) {
-            return;
-        }
+        // Instead of loading the entire plugin, directly include the database manager
+        require_once RYVR_INCLUDES_DIR . 'database/class-database-manager.php';
         
-        // Let the database manager create the tables.
+        // Create an instance directly instead of using the plugin container
+        $db_manager = new \Ryvr\Database\Database_Manager();
+        $db_manager->init();
+        
+        // Let the database manager create the tables
         $db_manager->create_tables();
     }
 
