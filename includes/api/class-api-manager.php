@@ -10,6 +10,9 @@
 
 namespace Ryvr\API;
 
+// Create an alias for Services\DataForSEO_Service in the Ryvr\API namespace for backward compatibility
+class_alias('\\Ryvr\\API\\Services\\DataForSEO_Service', '\\Ryvr\\API\\DataForSEO_Service');
+
 /**
  * The API Manager class.
  *

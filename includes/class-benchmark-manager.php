@@ -11,7 +11,7 @@
 namespace Ryvr\Benchmarks;
 
 use Ryvr\Database\Database_Manager;
-use Ryvr\API\Services\DataForSEO_Service;
+use Ryvr\API\DataForSEO_Service;
 use Exception;
 
 /**
