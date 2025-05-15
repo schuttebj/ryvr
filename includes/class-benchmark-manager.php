@@ -2,25 +2,27 @@
 /**
  * The Benchmark Manager class.
  *
- * Handles benchmark data collection, storage, and reporting.
+ * Handles industry benchmark data and reporting.
  *
  * @package    Ryvr
- * @subpackage Ryvr/Benchmarks
+ * @subpackage Ryvr/Includes
  */
 
 namespace Ryvr\Benchmarks;
 
 use Ryvr\Database\Database_Manager;
-use Ryvr\API\DataForSEO_Service;
+use Ryvr\API\Services\DataForSEO_Service;
 use Exception;
 
 /**
  * The Benchmark Manager class.
  *
- * This class handles the creation, management, and retrieval of industry benchmarks.
+ * This class handles the collection, storage, and reporting of
+ * industry benchmark data to provide users with relevant
+ * competitive insights.
  *
  * @package    Ryvr
- * @subpackage Ryvr/Benchmarks
+ * @subpackage Ryvr/Includes
  */
 class Benchmark_Manager {
 
