@@ -45,6 +45,7 @@ function ryvr_complianz_missing_notice() {
 
 // Define plugin constants.
 define( 'RYVR_VERSION', '1.0.0' );
+define( 'RYVR_DB_VERSION', '1.0.0' );
 define( 'RYVR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'RYVR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'RYVR_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -274,7 +275,7 @@ final class Ryvr_AI_Platform {
      *
      * @return void
      */
-    private function __wakeup() {
+    public function __wakeup() {
         // Prevent unserializing.
     }
 }
@@ -290,11 +291,11 @@ function ryvr() {
 
 /**
  * The code that runs during plugin activation.
- * This action is documented in includes/class-plugin-activator.php
+ * This action is documented in includes/core/class-activator.php
  */
 function activate_ryvr_ai_platform() {
-    require_once plugin_dir_path( __FILE__ ) . 'includes/class-plugin-activator.php';
-    \Ryvr\Plugin_Activator::activate();
+    require_once plugin_dir_path( __FILE__ ) . 'includes/core/class-activator.php';
+    \Ryvr\Core\Activator::activate();
 }
 
 /**
@@ -306,6 +307,23 @@ function init_ryvr_ai_platform() {
     if ($db_manager->needs_update()) {
         $db_manager->update();
     }
+}
+
+/**
+ * The code that runs during plugin deactivation.
+ * This action is documented in includes/core/class-deactivator.php
+ */
+function deactivate_ryvr_ai_platform() {
+    require_once plugin_dir_path( __FILE__ ) . 'includes/core/class-deactivator.php';
+    \Ryvr\Core\Deactivator::deactivate();
+}
+
+/**
+ * The code that runs the main plugin functionality.
+ */
+function run_ryvr_ai_platform() {
+    // Initialize the main plugin class
+    ryvr();
 }
 
 // Register activation, deactivation, and uninstallation hooks
