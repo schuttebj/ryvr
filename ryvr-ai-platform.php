@@ -287,6 +287,21 @@ final class Ryvr_AI_Platform {
     public function __wakeup() {
         // Prevent unserializing.
     }
+
+    /**
+     * Add plugin action links.
+     *
+     * @param array $links Default plugin action links.
+     * @return array Modified plugin action links.
+     */
+    public function add_plugin_action_links( $links ) {
+        $plugin_links = [
+            '<a href="' . admin_url( 'admin.php?page=ryvr-ai-settings' ) . '">' . __( 'Settings', 'ryvr-ai' ) . '</a>',
+            '<a href="' . admin_url( 'admin.php?page=ryvr-ai' ) . '">' . __( 'Dashboard', 'ryvr-ai' ) . '</a>',
+        ];
+        
+        return array_merge( $plugin_links, $links );
+    }
 }
 
 /**

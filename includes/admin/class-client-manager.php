@@ -308,4 +308,18 @@ class Client_Manager {
         
         return false;
     }
+
+    /**
+     * Register the admin menu page.
+     */
+    public function register_admin_menu() {
+        add_submenu_page(
+            'ryvr-ai',  // Parent menu slug
+            __('Client Manager', 'ryvr-ai'),
+            __('Client Manager', 'ryvr-ai'),
+            'manage_options',
+            'ryvr-ai-client-manager',
+            array($this, 'render_page')
+        );
+    }
 } 

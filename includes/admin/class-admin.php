@@ -66,7 +66,7 @@ class Admin {
      */
     public function register_admin_menu() {
         // Debug output to check if this method is being called
-        error_log('Ryvr DEBUG: Admin::register_admin_menu() called');
+        error_log('Ryvr DEBUG: Admin::register_admin_menu() called - consolidated version');
         
         // Debug output for current user capabilities
         $current_user = wp_get_current_user();
@@ -75,7 +75,10 @@ class Admin {
         error_log('Ryvr DEBUG: Current user has edit_posts: ' . (current_user_can('edit_posts') ? 'yes' : 'no'));
         error_log('Ryvr DEBUG: Current user has manage_options: ' . (current_user_can('manage_options') ? 'yes' : 'no'));
         
-        // Main menu item.
+        // Remove any existing menu
+        remove_menu_page('ryvr-ai-direct');
+        
+        // Main menu item with updated registration
         add_menu_page(
             __( 'Ryvr AI Platform', 'ryvr-ai' ),
             __( 'Ryvr AI', 'ryvr-ai' ),
@@ -86,7 +89,7 @@ class Admin {
             30
         );
         
-        // Dashboard submenu.
+        // Dashboard submenu
         add_submenu_page(
             'ryvr-ai',
             __( 'Dashboard', 'ryvr-ai' ),
@@ -96,7 +99,7 @@ class Admin {
             [ $this, 'render_dashboard_page' ]
         );
         
-        // Tasks submenu.
+        // Tasks submenu
         add_submenu_page(
             'ryvr-ai',
             __( 'Tasks', 'ryvr-ai' ),
@@ -106,7 +109,7 @@ class Admin {
             [ $this, 'render_tasks_page' ]
         );
         
-        // New Task submenu.
+        // New Task submenu
         add_submenu_page(
             'ryvr-ai',
             __( 'New Task', 'ryvr-ai' ),
@@ -116,7 +119,7 @@ class Admin {
             [ $this, 'render_new_task_page' ]
         );
         
-        // Credits submenu.
+        // Credits submenu
         add_submenu_page(
             'ryvr-ai',
             __( 'Credits', 'ryvr-ai' ),
@@ -126,7 +129,7 @@ class Admin {
             [ $this, 'render_credits_page' ]
         );
         
-        // Settings submenu.
+        // Settings submenu
         add_submenu_page(
             'ryvr-ai',
             __( 'Settings', 'ryvr-ai' ),
@@ -267,6 +270,7 @@ class Admin {
     public function add_plugin_action_links( $links ) {
         $plugin_links = [
             '<a href="' . admin_url( 'admin.php?page=ryvr-ai-settings' ) . '">' . __( 'Settings', 'ryvr-ai' ) . '</a>',
+            '<a href="' . admin_url( 'admin.php?page=ryvr-ai' ) . '">' . __( 'Dashboard', 'ryvr-ai' ) . '</a>',
         ];
         
         return array_merge( $plugin_links, $links );
