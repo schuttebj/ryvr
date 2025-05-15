@@ -267,7 +267,6 @@ class Admin {
     public function add_plugin_action_links( $links ) {
         $plugin_links = [
             '<a href="' . admin_url( 'admin.php?page=ryvr-ai-settings' ) . '">' . __( 'Settings', 'ryvr-ai' ) . '</a>',
-            '<a href="' . admin_url( 'admin.php?page=ryvr-ai' ) . '">' . __( 'Dashboard', 'ryvr-ai' ) . '</a>',
         ];
         
         return array_merge( $plugin_links, $links );
