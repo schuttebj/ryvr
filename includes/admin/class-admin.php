@@ -480,6 +480,10 @@ class Admin {
             return;
         }
         
+        // For debugging
+        error_log('DataForSEO Test - Username: ' . $username);
+        error_log('DataForSEO Test - Attempting test connection');
+        
         // Get API Manager
         $api_manager = ryvr()->get_component( 'api_manager' );
         
@@ -488,27 +492,66 @@ class Admin {
             return;
         }
         
-        // Get DataForSEO service
+        // Save API credentials temporarily
+        update_option( 'ryvr_dataforseo_api_login', $username );
+        update_option( 'ryvr_dataforseo_api_password', $password );
+        
+        // Get DataForSEO service and enable sandbox mode
         $dataforseo_service = $api_manager->get_service( 'dataforseo' );
+        update_option( 'ryvr_dataforseo_sandbox_mode', 'on' );
         
         if ( ! $dataforseo_service ) {
             wp_send_json_error( [ 'message' => __( 'DataForSEO service not available.', 'ryvr-ai' ) ] );
             return;
         }
         
-        // Save API credentials temporarily
-        update_option( 'ryvr_dataforseo_api_login', $username );
-        update_option( 'ryvr_dataforseo_api_password', $password );
-        
-        // Test connection
-        $result = $dataforseo_service->test_connection();
-        
-        if ( is_wp_error( $result ) ) {
-            wp_send_json_error( [ 'message' => $result->get_error_message() ] );
-            return;
+        try {
+            // Test connection directly with our own request
+            $url = 'https://sandbox.dataforseo.com/v3/pingback';
+            $args = [
+                'method'  => 'GET',
+                'headers' => [
+                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Basic ' . base64_encode($username . ':' . $password),
+                ],
+                'timeout' => 30,
+            ];
+            
+            // Make the request
+            $response = wp_remote_request($url, $args);
+            
+            // Log response for debugging
+            error_log('DataForSEO Test - Raw response: ' . print_r($response, true));
+            
+            // Check for errors
+            if (is_wp_error($response)) {
+                wp_send_json_error(['message' => $response->get_error_message()]);
+                return;
+            }
+            
+            // Get response code
+            $response_code = wp_remote_retrieve_response_code($response);
+            $body = wp_remote_retrieve_body($response);
+            
+            if ($response_code < 200 || $response_code >= 300) {
+                wp_send_json_error(['message' => "HTTP Error: $response_code - $body"]);
+                return;
+            }
+            
+            // Parse response
+            $data = json_decode($body, true);
+            
+            if (isset($data['status_code']) && $data['status_code'] !== 20000) {
+                $message = isset($data['status_message']) ? $data['status_message'] : 'Unknown API error';
+                wp_send_json_error(['message' => $message]);
+                return;
+            }
+            
+            // Return success
+            wp_send_json_success(['message' => __('Connection successful!', 'ryvr-ai')]);
+            
+        } catch (Exception $e) {
+            wp_send_json_error(['message' => $e->getMessage()]);
         }
-        
-        // Return success
-        wp_send_json_success( [ 'message' => __( 'Connection successful!', 'ryvr-ai' ) ] );
     }
 } 

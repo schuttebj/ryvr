@@ -226,6 +226,9 @@ if ( isset( $_POST['ryvr_settings_nonce'] ) && wp_verify_nonce( $_POST['ryvr_set
             $button.prop('disabled', true);
             $result.html('<span class="spinner is-active"></span> <?php esc_html_e( 'Testing connection...', 'ryvr-ai' ); ?>');
             
+            // For debugging
+            console.log('Sending DataForSEO test with username: ' + $('#ryvr_dataforseo_username').val());
+            
             $.ajax({
                 url: ajaxurl,
                 type: 'POST',
@@ -236,13 +239,15 @@ if ( isset( $_POST['ryvr_settings_nonce'] ) && wp_verify_nonce( $_POST['ryvr_set
                     nonce: '<?php echo wp_create_nonce( 'ryvr_test_api' ); ?>'
                 },
                 success: function(response) {
+                    console.log('DataForSEO response:', response);
                     if (response.success) {
                         $result.html('<span class="dashicons dashicons-yes" style="color:green;"></span> <?php esc_html_e( 'Connection successful!', 'ryvr-ai' ); ?>');
                     } else {
                         $result.html('<span class="dashicons dashicons-no" style="color:red;"></span> ' + response.data.message);
                     }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error('DataForSEO AJAX error:', status, error);
                     $result.html('<span class="dashicons dashicons-no" style="color:red;"></span> <?php esc_html_e( 'Connection failed. Please try again.', 'ryvr-ai' ); ?>');
                 },
                 complete: function() {
