@@ -93,18 +93,29 @@ class DataForSEO_Service {
     public function set_client_id($client_id) {
         $this->client_id = $client_id;
         
-        // If client ID is set, try to load client-specific settings
+        // If client ID is set, check if we should use client-specific settings
         if ($client_id > 0) {
-            $client_username = get_post_meta($client_id, 'ryvr_dataforseo_username', true);
-            $client_password = get_post_meta($client_id, 'ryvr_dataforseo_password', true);
+            // First check if we should use default platform credentials
+            $use_default = get_post_meta($client_id, 'ryvr_use_default_dataforseo', true);
             
-            // Override global settings with client settings if available
-            if (!empty($client_username)) {
-                $this->username = $client_username;
+            // If not explicitly set, default to using platform credentials (safer option)
+            if ($use_default === '') {
+                $use_default = '1';
             }
             
-            if (!empty($client_password)) {
-                $this->password = $client_password;
+            // Only use client-specific credentials if explicitly set not to use defaults
+            if ($use_default !== '1') {
+                $client_username = get_post_meta($client_id, 'ryvr_dataforseo_username', true);
+                $client_password = get_post_meta($client_id, 'ryvr_dataforseo_password', true);
+                
+                // Override global settings with client settings if available
+                if (!empty($client_username)) {
+                    $this->username = $client_username;
+                }
+                
+                if (!empty($client_password)) {
+                    $this->password = $client_password;
+                }
             }
         }
     }

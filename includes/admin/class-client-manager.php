@@ -105,6 +105,17 @@ class Client_Manager {
             'title' => 'API Keys',
             'fields' => [
                 [
+                    'key' => 'field_ryvr_use_default_dataforseo',
+                    'label' => 'Use Platform DataForSEO Credentials',
+                    'name' => 'ryvr_use_default_dataforseo',
+                    'type' => 'true_false',
+                    'instructions' => 'Toggle to use platform default DataForSEO credentials (recommended) or client-specific credentials.',
+                    'default_value' => 1,
+                    'ui' => 1,
+                    'ui_on_text' => 'Use Platform Default',
+                    'ui_off_text' => 'Use Client-Specific',
+                ],
+                [
                     'key' => 'field_ryvr_dataforseo_username',
                     'label' => 'DataForSEO Username',
                     'name' => 'ryvr_dataforseo_username',
@@ -113,6 +124,15 @@ class Client_Manager {
                     'required' => 0,
                     'wrapper' => [
                         'width' => '50',
+                    ],
+                    'conditional_logic' => [
+                        [
+                            [
+                                'field' => 'field_ryvr_use_default_dataforseo',
+                                'operator' => '!=',
+                                'value' => '1',
+                            ],
+                        ],
                     ],
                 ],
                 [
@@ -125,6 +145,26 @@ class Client_Manager {
                     'wrapper' => [
                         'width' => '50',
                     ],
+                    'conditional_logic' => [
+                        [
+                            [
+                                'field' => 'field_ryvr_use_default_dataforseo',
+                                'operator' => '!=',
+                                'value' => '1',
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'key' => 'field_ryvr_use_default_openai',
+                    'label' => 'Use Platform OpenAI API Key',
+                    'name' => 'ryvr_use_default_openai',
+                    'type' => 'true_false',
+                    'instructions' => 'Toggle to use platform default OpenAI API key (recommended) or client-specific key.',
+                    'default_value' => 1,
+                    'ui' => 1,
+                    'ui_on_text' => 'Use Platform Default',
+                    'ui_off_text' => 'Use Client-Specific',
                 ],
                 [
                     'key' => 'field_ryvr_openai_api_key',
@@ -133,6 +173,15 @@ class Client_Manager {
                     'type' => 'password',
                     'instructions' => 'Enter the client-specific OpenAI API key.',
                     'required' => 0,
+                    'conditional_logic' => [
+                        [
+                            [
+                                'field' => 'field_ryvr_use_default_openai',
+                                'operator' => '!=',
+                                'value' => '1',
+                            ],
+                        ],
+                    ],
                 ],
             ],
             'location' => [
@@ -272,38 +321,97 @@ class Client_Manager {
     }
 
     /**
-     * Get client-specific API keys.
+     * Get client API keys.
      *
      * @param int $client_id Client ID.
-     * @return array API keys.
+     * @return array Client API keys.
      */
     public function get_client_api_keys($client_id) {
-        $keys = [
-            'dataforseo_username' => get_post_meta($client_id, 'ryvr_dataforseo_username', true),
-            'dataforseo_password' => get_post_meta($client_id, 'ryvr_dataforseo_password', true),
-            'openai_api_key' => get_post_meta($client_id, 'ryvr_openai_api_key', true),
-        ];
+        if (!$client_id) {
+            return [];
+        }
         
-        return $keys;
+        // OpenAI settings
+        $use_default_openai = get_post_meta($client_id, 'ryvr_use_default_openai', true);
+        if ($use_default_openai === '') {
+            $use_default_openai = '1'; // Default to platform keys if not set
+        }
+        
+        $openai_api_key = '';
+        if ($use_default_openai === '1') {
+            $openai_api_key = get_option('ryvr_openai_api_key', '');
+        } else {
+            $openai_api_key = get_post_meta($client_id, 'ryvr_openai_api_key', true);
+        }
+        
+        // DataForSEO settings
+        $use_default_dataforseo = get_post_meta($client_id, 'ryvr_use_default_dataforseo', true);
+        if ($use_default_dataforseo === '') {
+            $use_default_dataforseo = '1'; // Default to platform keys if not set
+        }
+        
+        $dataforseo_username = '';
+        $dataforseo_password = '';
+        if ($use_default_dataforseo === '1') {
+            $dataforseo_username = get_option('ryvr_dataforseo_api_login', '');
+            $dataforseo_password = get_option('ryvr_dataforseo_api_password', '');
+        } else {
+            $dataforseo_username = get_post_meta($client_id, 'ryvr_dataforseo_username', true);
+            $dataforseo_password = get_post_meta($client_id, 'ryvr_dataforseo_password', true);
+        }
+        
+        return [
+            'openai' => [
+                'use_default' => $use_default_openai === '1',
+                'api_key' => $openai_api_key,
+            ],
+            'dataforseo' => [
+                'use_default' => $use_default_dataforseo === '1',
+                'username' => $dataforseo_username,
+                'password' => $dataforseo_password,
+            ],
+        ];
     }
 
     /**
-     * Check if client has API keys set.
+     * Check if a client has API keys for a specific service.
      *
      * @param int    $client_id Client ID.
-     * @param string $service Service name (dataforseo, openai).
-     * @return bool Whether the client has API keys set for the service.
+     * @param string $service Service name.
+     * @return bool Whether client has API keys for the service.
      */
     public function client_has_api_keys($client_id, $service) {
+        if (!$client_id) {
+            return false;
+        }
+        
+        // Check if using platform defaults
+        if ($service === 'openai') {
+            $use_default = get_post_meta($client_id, 'ryvr_use_default_openai', true);
+            
+            // If using platform default or not explicitly set
+            if ($use_default === '1' || $use_default === '') {
+                // Check if platform has the API key configured
+                return !empty(get_option('ryvr_openai_api_key', ''));
+            }
+            
+            // Otherwise check for client-specific key
+            return !empty(get_post_meta($client_id, 'ryvr_openai_api_key', true));
+        }
+        
         if ($service === 'dataforseo') {
-            $username = get_post_meta($client_id, 'ryvr_dataforseo_username', true);
-            $password = get_post_meta($client_id, 'ryvr_dataforseo_password', true);
+            $use_default = get_post_meta($client_id, 'ryvr_use_default_dataforseo', true);
             
-            return !empty($username) && !empty($password);
-        } elseif ($service === 'openai') {
-            $api_key = get_post_meta($client_id, 'ryvr_openai_api_key', true);
+            // If using platform default or not explicitly set
+            if ($use_default === '1' || $use_default === '') {
+                // Check if platform has the API credentials configured
+                return !empty(get_option('ryvr_dataforseo_api_login', '')) && 
+                       !empty(get_option('ryvr_dataforseo_api_password', ''));
+            }
             
-            return !empty($api_key);
+            // Otherwise check for client-specific credentials
+            return !empty(get_post_meta($client_id, 'ryvr_dataforseo_username', true)) && 
+                   !empty(get_post_meta($client_id, 'ryvr_dataforseo_password', true));
         }
         
         return false;

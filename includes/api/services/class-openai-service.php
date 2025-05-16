@@ -70,13 +70,24 @@ class OpenAI_Service {
     public function set_client_id($client_id) {
         $this->client_id = $client_id;
         
-        // If client ID is set, try to load client-specific settings
+        // If client ID is set, check if we should use client-specific settings
         if ($client_id > 0) {
-            $client_api_key = get_post_meta($client_id, 'ryvr_openai_api_key', true);
+            // First check if we should use default platform credentials
+            $use_default = get_post_meta($client_id, 'ryvr_use_default_openai', true);
             
-            // Override global settings with client settings if available
-            if (!empty($client_api_key)) {
-                $this->api_key = $client_api_key;
+            // If not explicitly set, default to using platform credentials (safer option)
+            if ($use_default === '') {
+                $use_default = '1';
+            }
+            
+            // Only use client-specific credentials if explicitly set not to use defaults
+            if ($use_default !== '1') {
+                $client_api_key = get_post_meta($client_id, 'ryvr_openai_api_key', true);
+                
+                // Override global settings with client settings if available and not empty
+                if (!empty($client_api_key)) {
+                    $this->api_key = $client_api_key;
+                }
             }
         }
     }
