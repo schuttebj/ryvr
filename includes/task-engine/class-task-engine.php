@@ -196,6 +196,20 @@ class Task_Engine {
     }
     
     /**
+     * Schedule task processing.
+     *
+     * This method schedules immediate task processing for pending tasks.
+     *
+     * @return void
+     */
+    private function schedule_task_processing() {
+        // Schedule immediate task processing if there are pending tasks
+        if (!wp_next_scheduled('ryvr_process_tasks')) {
+            wp_schedule_single_event(time() + 60, 'ryvr_process_tasks');
+        }
+    }
+    
+    /**
      * Add custom cron schedules.
      *
      * @param array $schedules Existing cron schedules.
