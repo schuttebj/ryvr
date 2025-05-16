@@ -65,18 +65,18 @@ class Admin {
      * @return void
      */
     public function register_admin_menu() {
-        // Main menu item
+        // Main menu.
         add_menu_page(
-            __( 'Ryvr AI Platform', 'ryvr-ai' ),
+            __( 'Ryvr AI', 'ryvr-ai' ),
             __( 'Ryvr AI', 'ryvr-ai' ),
             'read',
             'ryvr-ai',
             [ $this, 'render_dashboard_page' ],
-            'dashicons-chart-area',
-            30
+            RYVR_ASSETS_URL . 'images/ryvr-icon.png',
+            25
         );
-        
-        // Dashboard submenu
+
+        // Dashboard submenu.
         add_submenu_page(
             'ryvr-ai',
             __( 'Dashboard', 'ryvr-ai' ),
@@ -85,53 +85,27 @@ class Admin {
             'ryvr-ai',
             [ $this, 'render_dashboard_page' ]
         );
-        
-        // Tasks submenu
+
+        // Tasks submenu.
         add_submenu_page(
             'ryvr-ai',
             __( 'Tasks', 'ryvr-ai' ),
             __( 'Tasks', 'ryvr-ai' ),
-            'read',
+            'edit_posts',
             'ryvr-ai-tasks',
             [ $this, 'render_tasks_page' ]
         );
-        
-        // New Task submenu
+
+        // New Task submenu.
         add_submenu_page(
             'ryvr-ai',
             __( 'New Task', 'ryvr-ai' ),
             __( 'New Task', 'ryvr-ai' ),
-            'read',
+            'edit_posts',
             'ryvr-ai-new-task',
             [ $this, 'render_new_task_page' ]
         );
-        
-        // Clients submenu - only show to admins/managers
-        $client_manager = ryvr()->get_component('client_manager');
-        if ($client_manager) {
-            add_submenu_page(
-                'ryvr-ai',
-                __( 'Clients', 'ryvr-ai' ),
-                __( 'Clients', 'ryvr-ai' ),
-                'manage_options',
-                'ryvr-ai-clients',
-                [ $client_manager, 'render_page' ]
-            );
-        }
-        
-        // Benchmarks submenu
-        $benchmark_manager = ryvr()->get_component('benchmark_manager');
-        if ($benchmark_manager) {
-            add_submenu_page(
-                'ryvr-ai',
-                __( 'Benchmarks', 'ryvr-ai' ),
-                __( 'Benchmarks', 'ryvr-ai' ),
-                'read',
-                'ryvr-ai-benchmarks',
-                [ $benchmark_manager, 'render_page' ]
-            );
-        }
-        
+
         // Credits submenu
         add_submenu_page(
             'ryvr-ai',
@@ -141,33 +115,38 @@ class Admin {
             'ryvr-ai-credits',
             [ $this, 'render_credits_page' ]
         );
-        
-        // Notifications submenu
-        if (isset($this->notifications_page)) {
-            add_submenu_page(
-                'ryvr-ai',
-                __( 'Notifications', 'ryvr-ai' ),
-                __( 'Notifications', 'ryvr-ai' ),
-                'read',
-                'ryvr-ai-notifications',
-                [ $this->notifications_page, 'render_page' ]
-            );
-        }
-        
-        // Debug Logs submenu - only show to admins
-        $debug_page = ryvr()->get_component('debug_page');
-        if ($debug_page) {
-            add_submenu_page(
-                'ryvr-ai',
-                __( 'Debug Logs', 'ryvr-ai' ),
-                __( 'Debug Logs', 'ryvr-ai' ),
-                'manage_options',
-                'ryvr-ai-debug',
-                [ $debug_page, 'render_page' ]
-            );
-        }
-        
-        // Settings submenu
+
+        // Clients submenu
+        add_submenu_page(
+            'ryvr-ai',
+            __( 'Clients', 'ryvr-ai' ),
+            __( 'Clients', 'ryvr-ai' ),
+            'manage_options',
+            'edit.php?post_type=ryvr_client',
+            null
+        );
+
+        // Notifications submenu.
+        add_submenu_page(
+            'ryvr-ai',
+            __( 'Notifications', 'ryvr-ai' ),
+            __( 'Notifications', 'ryvr-ai' ),
+            'read',
+            'ryvr-ai-notifications',
+            [ $this, 'render_notifications_page' ]
+        );
+
+        // Debug Logs submenu
+        add_submenu_page(
+            'ryvr-ai',
+            __( 'Debug Logs', 'ryvr-ai' ),
+            __( 'Debug Logs', 'ryvr-ai' ),
+            'manage_options',
+            'ryvr-ai-debug',
+            [ $this, 'render_debug_page' ]
+        );
+
+        // Settings submenu.
         add_submenu_page(
             'ryvr-ai',
             __( 'Settings', 'ryvr-ai' ),
@@ -364,6 +343,33 @@ class Admin {
             wp_die(__('Sorry, you are not allowed to access this page.', 'ryvr-ai'));
         }
         require_once RYVR_TEMPLATES_DIR . 'admin/credits.php';
+    }
+
+    /**
+     * Render notifications page.
+     */
+    public function render_notifications_page() {
+        // Check if user has permission
+        if ( ! current_user_can( 'read' ) ) {
+            wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ryvr-ai' ) );
+        }
+
+        // Include template
+        require_once RYVR_TEMPLATES_DIR . 'admin/notifications.php';
+    }
+
+    /**
+     * Render debug page.
+     */
+    public function render_debug_page() {
+        // Check if user has permission
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'ryvr-ai' ) );
+        }
+
+        // Create an instance of the Debug_Page class and call its render_page method
+        $debug_page = new Debug_Page();
+        $debug_page->render_page();
     }
 
     /**
