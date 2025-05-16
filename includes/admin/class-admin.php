@@ -507,7 +507,8 @@ class Admin {
         
         try {
             // Test connection directly with our own request
-            $url = 'https://sandbox.dataforseo.com/v3/pingback';
+            // Use app_info endpoint which is a valid endpoint for testing
+            $url = 'https://sandbox.dataforseo.com/v3/app_info';
             $args = [
                 'method'  => 'GET',
                 'headers' => [
@@ -532,6 +533,9 @@ class Admin {
             // Get response code
             $response_code = wp_remote_retrieve_response_code($response);
             $body = wp_remote_retrieve_body($response);
+            
+            error_log('DataForSEO Test - Response code: ' . $response_code);
+            error_log('DataForSEO Test - Response body: ' . $body);
             
             if ($response_code < 200 || $response_code >= 300) {
                 wp_send_json_error(['message' => "HTTP Error: $response_code - $body"]);

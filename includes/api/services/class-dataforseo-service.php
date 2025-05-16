@@ -197,7 +197,7 @@ class DataForSEO_Service {
      */
     public function test_connection() {
         // Try a simple API call to test connection
-        $result = $this->make_request('v3/pingback');
+        $result = $this->make_request('v3/app_info');
 
         if (is_wp_error($result)) {
             return $result;
