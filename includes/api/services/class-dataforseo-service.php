@@ -254,6 +254,23 @@ class DataForSEO_Service {
 
         $options = wp_parse_args($options, $defaults);
 
+        // Debug info
+        error_log(sprintf('DataForSEO - Fetching keyword suggestions for: %s', $keyword));
+        error_log(sprintf('DataForSEO - API URL: %s', $this->get_api_url()));
+        
+        // Add more detailed output for debugging
+        if ($this->sandbox_mode) {
+            error_log('DataForSEO - Using sandbox mode');
+            
+            // In sandbox mode, return mock data instead of making actual API call
+            $mock_data = $this->generate_mock_keyword_data($keyword, $options);
+            
+            error_log(sprintf('DataForSEO - Returning mock data with %d keywords', 
+                isset($mock_data['tasks'][0]['result']) ? count($mock_data['tasks'][0]['result']) : 0));
+            
+            return $mock_data;
+        }
+        
         $data = [
             'keyword' => $keyword,
             'location_code' => $options['location_code'],
@@ -261,7 +278,88 @@ class DataForSEO_Service {
             'limit' => $options['limit'],
         ];
 
-        return $this->make_request('v3/keywords_data/google/keywords_for_keywords/live', [$data]);
+        try {
+            $response = $this->make_request('v3/keywords_data/google/keywords_for_keywords/live', [$data]);
+            
+            // Log response for debugging
+            if (is_wp_error($response)) {
+                error_log(sprintf('DataForSEO API Error: %s', $response->get_error_message()));
+                if ($response->get_error_data()) {
+                    error_log(sprintf('DataForSEO API Error Data: %s', 
+                        is_array($response->get_error_data()) ? 
+                        json_encode($response->get_error_data()) : 
+                        $response->get_error_data()));
+                }
+            } else {
+                error_log(sprintf('DataForSEO API Success - Response contains %d tasks', 
+                    isset($response['tasks']) ? count($response['tasks']) : 0));
+            }
+            
+            return $response;
+        } catch (\Exception $e) {
+            error_log(sprintf('DataForSEO Exception: %s', $e->getMessage()));
+            return new \WP_Error('dataforseo_exception', $e->getMessage());
+        }
+    }
+    
+    /**
+     * Generate mock keyword data for testing in sandbox mode
+     *
+     * @param string $keyword Seed keyword
+     * @param array $options Options
+     * @return array Mock response data
+     */
+    private function generate_mock_keyword_data($keyword, $options) {
+        // Create realistic mock data for testing
+        $result = [];
+        $seedWords = ['marketing', 'seo', 'content', 'website', 'business', 'online', 'search', 'engine', 'optimization'];
+        
+        // Generate 20 sample keywords based on the seed keyword
+        for ($i = 0; $i < 20; $i++) {
+            $randomWord = $seedWords[array_rand($seedWords)];
+            $mockKeyword = $i % 3 === 0 ? "$keyword $randomWord" : "$randomWord $keyword";
+            
+            $result[] = [
+                'keyword_data' => [
+                    'keyword' => $mockKeyword,
+                    'search_volume' => rand(100, 10000),
+                    'cpc' => round(rand(50, 500) / 100, 2),
+                    'competition' => round(rand(1, 100) / 100, 2),
+                    'keyword_difficulty' => rand(1, 100),
+                ]
+            ];
+        }
+        
+        return [
+            'version' => '0.1.20250515',
+            'status_code' => 20000,
+            'status_message' => 'Ok.',
+            'time' => '0.2378 sec.',
+            'cost' => 0,
+            'tasks_count' => 1,
+            'tasks_error' => 0,
+            'tasks' => [
+                [
+                    'id' => 'mock_task_' . time(),
+                    'status_code' => 20000,
+                    'status_message' => 'Ok.',
+                    'time' => '0.2298 sec.',
+                    'cost' => 0,
+                    'result_count' => count($result),
+                    'path' => ['v3', 'keywords_data', 'google', 'keywords_for_keywords', 'live'],
+                    'data' => [
+                        'api' => 'keywords_data',
+                        'function' => 'keywords_for_keywords',
+                        'se' => 'google',
+                        'keyword' => $keyword,
+                        'location_code' => $options['location_code'],
+                        'language_code' => $options['language_code'],
+                        'limit' => $options['limit']
+                    ],
+                    'result' => $result
+                ]
+            ]
+        ];
     }
 
     /**

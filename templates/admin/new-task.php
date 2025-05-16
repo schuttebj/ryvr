@@ -290,6 +290,7 @@ jQuery(document).ready(function($) {
         // Get form data
         var formData = $(this).serialize();
         formData += '&action=ryvr_create_task';
+        formData += '&nonce=<?php echo wp_create_nonce('ryvr_task_nonce'); ?>';
         
         // Disable submit button
         $('#create-task-button').prop('disabled', true).text('<?php echo esc_js( __( 'Creating Task...', 'ryvr-ai' ) ); ?>');

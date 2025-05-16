@@ -45,6 +45,7 @@ class Keyword_Research_Processor extends Task_Processor {
         $validation = $this->validate_inputs( $inputs );
         
         if ( is_wp_error( $validation ) ) {
+            $this->log( $task->id, sprintf( __( 'Input validation failed: %s', 'ryvr-ai' ), $validation->get_error_message() ), 'error' );
             return $validation;
         }
 
@@ -52,6 +53,7 @@ class Keyword_Research_Processor extends Task_Processor {
         $dataforseo = $this->get_api_service( 'dataforseo' );
         
         if ( ! $dataforseo ) {
+            $this->log( $task->id, __( 'DataForSEO API service is not available.', 'ryvr-ai' ), 'error' );
             return $this->create_error( 
                 'api_service_unavailable', 
                 __( 'DataForSEO API service is not available.', 'ryvr-ai' ) 
@@ -63,6 +65,10 @@ class Keyword_Research_Processor extends Task_Processor {
         $location = isset( $inputs['location'] ) ? $inputs['location'] : 2840; // Default to US
         $language = isset( $inputs['language'] ) ? $inputs['language'] : 'en';
         $limit = isset( $inputs['limit'] ) ? $inputs['limit'] : 100;
+
+        // Log parameters for debugging
+        $this->log( $task->id, sprintf( __( 'Parameters: keyword=%s, location=%s, language=%s, limit=%d', 'ryvr-ai' ), 
+            $seed_keyword, $location, $language, $limit ), 'debug' );
 
         // Initialize outputs.
         $outputs = [
@@ -91,15 +97,48 @@ class Keyword_Research_Processor extends Task_Processor {
                 'limit' => $limit,
             ];
 
+            // Check if API credentials are configured
+            if (!$dataforseo->is_configured()) {
+                $this->log( $task->id, __( 'DataForSEO API credentials are not configured.', 'ryvr-ai' ), 'error' );
+                return $this->create_error(
+                    'api_credentials_missing',
+                    __( 'DataForSEO API credentials are not configured.', 'ryvr-ai' )
+                );
+            }
+
+            // Log that we're about to make the API call
+            $this->log( $task->id, __( 'Making API call to DataForSEO...', 'ryvr-ai' ), 'debug' );
+
             // Make API call to get keyword data.
             $response = $dataforseo->keyword_suggestions( $seed_keyword, $options );
 
             if ( is_wp_error( $response ) ) {
+                $error_message = $response->get_error_message();
+                $error_data = $response->get_error_data();
+                
+                // Log detailed error
+                $this->log( $task->id, sprintf( __( 'DataForSEO API error: %s', 'ryvr-ai' ), $error_message ), 'error' );
+                if ($error_data) {
+                    $this->log( $task->id, sprintf( __( 'Error details: %s', 'ryvr-ai' ), 
+                        is_array($error_data) ? json_encode($error_data) : $error_data ), 'error' );
+                }
+                
                 return $this->create_error( 
                     'api_error', 
-                    sprintf( __( 'DataForSEO API error: %s', 'ryvr-ai' ), $response->get_error_message() ),
-                    $response->get_error_data()
+                    sprintf( __( 'DataForSEO API error: %s', 'ryvr-ai' ), $error_message ),
+                    $error_data
                 );
+            }
+
+            // Log success response for debugging
+            $this->log( $task->id, __( 'Received response from DataForSEO API', 'ryvr-ai' ), 'debug' );
+            
+            // Debug: Log the structure of the response
+            if (isset($response['tasks'])) {
+                $this->log( $task->id, sprintf( __( 'Response contains %d tasks', 'ryvr-ai' ), count($response['tasks']) ), 'debug' );
+            } else {
+                $this->log( $task->id, __( 'Response does not contain tasks array', 'ryvr-ai' ), 'warning' );
+                $this->log( $task->id, sprintf( __( 'Response structure: %s', 'ryvr-ai' ), json_encode(array_keys($response)) ), 'debug' );
             }
 
             // Process task_post response to get task ID.
