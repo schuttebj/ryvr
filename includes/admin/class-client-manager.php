@@ -34,6 +34,12 @@ class Client_Manager {
         
         // Add admin menu item.
         add_action('admin_menu', [$this, 'add_admin_menu']);
+        
+        // Process credits when saving client post
+        add_action('acf/save_post', [$this, 'process_client_credits'], 20);
+        
+        // AJAX handler for getting client credits
+        add_action('wp_ajax_ryvr_get_client_credits', [$this, 'ajax_get_client_credits']);
     }
 
     /**
@@ -260,6 +266,117 @@ class Client_Manager {
             'instruction_placement' => 'label',
             'active' => true,
         ]);
+        
+        // Client credits field group
+        acf_add_local_field_group([
+            'key' => 'group_ryvr_client_credits',
+            'title' => 'Client Credits',
+            'fields' => [
+                [
+                    'key' => 'field_ryvr_client_credits_balance',
+                    'label' => 'Credits Balance',
+                    'name' => 'ryvr_client_credits_balance',
+                    'type' => 'message',
+                    'message' => $this->get_client_credits_html(),
+                    'new_lines' => 'wpautop',
+                ],
+                [
+                    'key' => 'field_ryvr_client_add_credits',
+                    'label' => 'Add Credits',
+                    'name' => 'ryvr_client_add_credits',
+                    'type' => 'number',
+                    'instructions' => 'Enter the number of credits to add to this client.',
+                    'required' => 0,
+                    'min' => 0,
+                    'placeholder' => 'Enter amount',
+                    'wrapper' => [
+                        'width' => '50',
+                    ],
+                ],
+                [
+                    'key' => 'field_ryvr_client_credit_notes',
+                    'label' => 'Transaction Notes',
+                    'name' => 'ryvr_client_credit_notes',
+                    'type' => 'text',
+                    'instructions' => 'Optional notes for this transaction.',
+                    'required' => 0,
+                    'placeholder' => 'Notes',
+                    'wrapper' => [
+                        'width' => '50',
+                    ],
+                ],
+            ],
+            'location' => [
+                [
+                    [
+                        'param' => 'post_type',
+                        'operator' => '==',
+                        'value' => 'ryvr_client',
+                    ],
+                ],
+            ],
+            'position' => 'normal',
+            'style' => 'default',
+            'label_placement' => 'top',
+            'instruction_placement' => 'label',
+            'active' => true,
+        ]);
+    }
+
+    /**
+     * Get HTML for displaying client credits.
+     *
+     * @return string HTML for client credits.
+     */
+    private function get_client_credits_html() {
+        global $post;
+        
+        if (!$post || !isset($post->ID)) {
+            return '<p>' . __('Save the client to view credits.', 'ryvr-ai') . '</p>';
+        }
+        
+        $client_id = $post->ID;
+        $credits = ryvr_get_client_credits($client_id);
+        
+        $html = '<div class="ryvr-client-credits-display">';
+        $html .= '<p><strong>' . __('Current Balance:', 'ryvr-ai') . '</strong> ';
+        $html .= '<span class="ryvr-credit-balance">' . number_format($credits) . '</span> ' . __('credits', 'ryvr-ai') . '</p>';
+        
+        // Add credits transaction history if any
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'ryvr_client_credits';
+        $transactions = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM {$table_name} WHERE client_id = %d ORDER BY created_at DESC LIMIT 10",
+                $client_id
+            )
+        );
+        
+        if (!empty($transactions)) {
+            $html .= '<h4>' . __('Recent Transactions', 'ryvr-ai') . '</h4>';
+            $html .= '<table class="widefat striped" style="width:100%">';
+            $html .= '<thead><tr>';
+            $html .= '<th>' . __('Date', 'ryvr-ai') . '</th>';
+            $html .= '<th>' . __('Amount', 'ryvr-ai') . '</th>';
+            $html .= '<th>' . __('Type', 'ryvr-ai') . '</th>';
+            $html .= '<th>' . __('Notes', 'ryvr-ai') . '</th>';
+            $html .= '</tr></thead><tbody>';
+            
+            foreach ($transactions as $transaction) {
+                $html .= '<tr>';
+                $html .= '<td>' . date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($transaction->created_at)) . '</td>';
+                $html .= '<td>' . number_format($transaction->credits_amount) . '</td>';
+                $html .= '<td>' . esc_html($transaction->transaction_type) . '</td>';
+                $html .= '<td>' . esc_html($transaction->notes) . '</td>';
+                $html .= '</tr>';
+            }
+            
+            $html .= '</tbody></table>';
+        }
+        
+        $html .= '</div>';
+        
+        return $html;
     }
 
     /**
@@ -429,5 +546,78 @@ class Client_Manager {
             'ryvr-ai-client-manager',
             array($this, 'render_page')
         );
+    }
+
+    /**
+     * Process client credits when saving client post.
+     *
+     * @param int $post_id Post ID.
+     * @return void
+     */
+    public function process_client_credits($post_id) {
+        // Check if this is a client post
+        if (get_post_type($post_id) !== 'ryvr_client') {
+            return;
+        }
+        
+        // Check if credits were added
+        $add_credits = filter_input(INPUT_POST, 'acf[field_ryvr_client_add_credits]', FILTER_VALIDATE_INT);
+        
+        if ($add_credits && $add_credits > 0) {
+            // Get notes if any
+            $notes = filter_input(INPUT_POST, 'acf[field_ryvr_client_credit_notes]', FILTER_SANITIZE_STRING);
+            
+            // Add credits to client
+            ryvr_add_client_credits(
+                $post_id, 
+                $add_credits, 
+                'regular', 
+                'admin_added', 
+                0,
+                $notes ?: __('Added by administrator', 'ryvr-ai')
+            );
+            
+            // Clear the fields after processing
+            update_field('field_ryvr_client_add_credits', '', $post_id);
+            update_field('field_ryvr_client_credit_notes', '', $post_id);
+            
+            // Add admin notice
+            add_action('admin_notices', function() use ($add_credits) {
+                echo '<div class="notice notice-success is-dismissible">';
+                echo '<p>' . sprintf(
+                    __('%s credits have been added to the client.', 'ryvr-ai'),
+                    '<strong>' . number_format($add_credits) . '</strong>'
+                ) . '</p>';
+                echo '</div>';
+            });
+        }
+    }
+
+    /**
+     * AJAX handler for getting client credits.
+     *
+     * @return void
+     */
+    public function ajax_get_client_credits() {
+        // Check permissions
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Permission denied.', 'ryvr-ai')]);
+        }
+        
+        // Get client ID
+        $client_id = isset($_POST['client_id']) ? intval($_POST['client_id']) : 0;
+        
+        if (empty($client_id)) {
+            wp_send_json_error(['message' => __('Invalid client ID.', 'ryvr-ai')]);
+        }
+        
+        // Get client credits
+        $credits = ryvr_get_client_credits($client_id);
+        
+        // Send response
+        wp_send_json_success([
+            'credits' => $credits,
+            'credits_formatted' => number_format($credits),
+        ]);
     }
 } 

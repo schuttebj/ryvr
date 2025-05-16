@@ -116,7 +116,16 @@ $formatted_outputs = $task_processor ? $task_processor->format_outputs( $outputs
         
         <div class="ryvr-task-info-item">
             <span class="ryvr-task-info-label"><?php esc_html_e( 'Credits Used', 'ryvr-ai' ); ?></span>
-            <?php echo esc_html( $task->credits_cost ); ?>
+            <?php 
+            echo esc_html( $task->credits_cost );
+            
+            // Show which credit system was used
+            if ($client_id > 0) {
+                echo ' <span class="ryvr-credit-source">(' . esc_html__('Client credits', 'ryvr-ai') . ')</span>';
+            } else {
+                echo ' <span class="ryvr-credit-source">(' . esc_html__('User credits', 'ryvr-ai') . ')</span>';
+            }
+            ?>
         </div>
     </div>
     

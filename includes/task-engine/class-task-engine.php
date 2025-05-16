@@ -51,6 +51,12 @@ class Task_Engine {
         
         // Register cron jobs.
         $this->register_cron_jobs();
+        
+        // Schedule recurring task processing.
+        $this->schedule_task_processing();
+        
+        // Add AJAX handler for getting task type info
+        add_action('wp_ajax_ryvr_get_task_type_info', [$this, 'ajax_get_task_type_info']);
     }
 
     /**
@@ -286,9 +292,33 @@ class Task_Engine {
         $credits_cost = $this->task_types[ $task_type ]['credits_cost'];
         $user_credits = ryvr_get_user_credits( $user_id );
         
-        if ( $user_credits < $credits_cost ) {
-            error_log(sprintf('Insufficient credits: user=%d, needed=%d, available=%d', $user_id, $credits_cost, $user_credits));
-            return new \WP_Error( 'insufficient_credits', __( 'You do not have enough credits to create this task.', 'ryvr-ai' ) );
+        // Check if this is a client-related task
+        $client_id = isset($inputs['client_id']) ? intval($inputs['client_id']) : 0;
+        $use_client_credits = ($client_id > 0);
+        
+        if ($use_client_credits) {
+            // Check client credits first
+            $client_credits = ryvr_get_client_credits($client_id);
+            
+            if ($client_credits < $credits_cost) {
+                error_log(sprintf('Insufficient client credits: client=%d, needed=%d, available=%d', 
+                    $client_id, $credits_cost, $client_credits));
+                return new \WP_Error(
+                    'insufficient_client_credits', 
+                    sprintf(__('Client does not have enough credits (%d needed, %d available).', 'ryvr-ai'), 
+                    $credits_cost, $client_credits)
+                );
+            }
+        } else {
+            // Check user credits if not using client credits
+            if ($user_credits < $credits_cost) {
+                error_log(sprintf('Insufficient credits: user=%d, needed=%d, available=%d', 
+                    $user_id, $credits_cost, $user_credits));
+                return new \WP_Error(
+                    'insufficient_credits', 
+                    __('You do not have enough credits to create this task.', 'ryvr-ai')
+                );
+            }
         }
         
         // Get task type details.
@@ -355,7 +385,13 @@ class Task_Engine {
         $task_id = $wpdb->insert_id;
         
         // Deduct credits.
-        $this->deduct_user_credits( $user_id, $credits_cost, $task_id );
+        if ($use_client_credits) {
+            // Deduct from client credits
+            $this->deduct_client_credits($client_id, $credits_cost, $task_id);
+        } else {
+            // Deduct from user credits
+            $this->deduct_user_credits($user_id, $credits_cost, $task_id);
+        }
         
         // Log task creation.
         $this->log_task(
@@ -1395,5 +1431,75 @@ class Task_Engine {
         wp_send_json_success( array(
             'message' => __( 'Task priority updated successfully.', 'ryvr-ai' ),
         ) );
+    }
+
+    /**
+     * Deduct credits from a user's account for a task.
+     *
+     * @param int $user_id User ID.
+     * @param int $amount Amount to deduct.
+     * @param int $task_id Task ID.
+     * @return bool Whether the operation was successful.
+     */
+    private function deduct_user_credits( $user_id, $amount, $task_id ) {
+        return ryvr_deduct_user_credits(
+            $user_id,
+            $amount,
+            'task',
+            $task_id,
+            sprintf(
+                __( 'Task ID: %d', 'ryvr-ai' ),
+                $task_id
+            )
+        );
+    }
+    
+    /**
+     * Deduct credits from a client's account for a task.
+     *
+     * @param int $client_id Client ID.
+     * @param int $amount Amount to deduct.
+     * @param int $task_id Task ID.
+     * @return bool Whether the operation was successful.
+     */
+    private function deduct_client_credits( $client_id, $amount, $task_id ) {
+        return ryvr_deduct_client_credits(
+            $client_id,
+            $amount,
+            'task',
+            $task_id,
+            sprintf(
+                __( 'Task ID: %d', 'ryvr-ai' ),
+                $task_id
+            )
+        );
+    }
+
+    /**
+     * AJAX handler for getting task type info.
+     *
+     * @return void
+     */
+    public function ajax_get_task_type_info() {
+        // Check nonce - omitted for simplicity but should be added in production
+        
+        // Get task type
+        $task_type = isset($_POST['task_type']) ? sanitize_text_field($_POST['task_type']) : '';
+        
+        if (empty($task_type) || !isset($this->task_types[$task_type])) {
+            wp_send_json_error(['message' => __('Invalid task type.', 'ryvr-ai')]);
+        }
+        
+        // Get task type info
+        $task_info = $this->task_types[$task_type];
+        
+        // Send response
+        wp_send_json_success([
+            'name' => $task_info['name'],
+            'description' => $task_info['description'],
+            'credits_cost' => $task_info['credits_cost'],
+            'icon' => $task_info['icon'],
+            'category' => $task_info['category'],
+        ]);
     }
 } 

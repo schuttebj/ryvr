@@ -47,6 +47,8 @@ class Database_Manager {
             'notifications' => $wpdb->prefix . 'ryvr_notifications',
             'platform_notifications' => $wpdb->prefix . 'ryvr_platform_notifications',
             'benchmarks' => $wpdb->prefix . 'ryvr_benchmarks',
+            'cache'     => $wpdb->prefix . 'ryvr_cache',
+            'client_credits' => $wpdb->prefix . 'ryvr_client_credits',
         ];
         
         // Check if database needs update.
@@ -277,6 +279,25 @@ class Database_Manager {
             KEY period_end (period_end),
             KEY location (location),
             KEY device (device)
+        ) $charset_collate;";
+        
+        dbDelta( $sql );
+        
+        // Client Credits table.
+        $sql = "CREATE TABLE {$this->tables['client_credits']} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            client_id bigint(20) unsigned NOT NULL,
+            credits_amount int(11) NOT NULL,
+            credits_type varchar(20) NOT NULL DEFAULT 'regular',
+            transaction_type varchar(20) NOT NULL,
+            reference_id bigint(20) unsigned NULL,
+            notes text NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY client_id (client_id),
+            KEY credits_type (credits_type),
+            KEY transaction_type (transaction_type),
+            KEY created_at (created_at)
         ) $charset_collate;";
         
         dbDelta( $sql );

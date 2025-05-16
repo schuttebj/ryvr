@@ -333,4 +333,104 @@ function ryvr_get_api_usage( $user_id, $service = '', $period = 'month' ) {
         'calls'   => (int) $results['calls'],
         'credits' => (int) $results['credits'],
     ];
+}
+
+/**
+ * Get client credits balance.
+ *
+ * @param int $client_id The client ID.
+ * @return int The credits balance.
+ */
+function ryvr_get_client_credits( $client_id ) {
+    global $wpdb;
+    
+    // Get the table name.
+    $table_name = $wpdb->prefix . 'ryvr_client_credits';
+    
+    // Query for the sum of credits.
+    $credits = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT SUM(credits_amount) FROM {$table_name} WHERE client_id = %d",
+            $client_id
+        )
+    );
+    
+    // Return the credits, or 0 if none found.
+    return $credits ? (int) $credits : 0;
+}
+
+/**
+ * Add credits to a client's account.
+ *
+ * @param int    $client_id The client ID.
+ * @param int    $amount The amount of credits to add.
+ * @param string $credits_type The type of credits (regular, bonus, etc.).
+ * @param string $transaction_type The type of transaction (purchase, admin, refund, etc.).
+ * @param int    $reference_id Reference ID (e.g., payment ID, task ID).
+ * @param string $notes Notes for the transaction.
+ * @return int|false The transaction ID or false on failure.
+ */
+function ryvr_add_client_credits( $client_id, $amount, $credits_type = 'regular', $transaction_type = 'admin', $reference_id = 0, $notes = '' ) {
+    global $wpdb;
+    
+    // Get the table name.
+    $table_name = $wpdb->prefix . 'ryvr_client_credits';
+    
+    // Insert the credits record.
+    $result = $wpdb->insert(
+        $table_name,
+        [
+            'client_id'       => $client_id,
+            'credits_amount'  => $amount,
+            'credits_type'    => $credits_type,
+            'transaction_type'=> $transaction_type,
+            'reference_id'    => $reference_id,
+            'notes'           => $notes,
+            'created_at'      => current_time( 'mysql', true ),
+        ],
+        [
+            '%d',
+            '%d',
+            '%s',
+            '%s',
+            '%d',
+            '%s',
+            '%s',
+        ]
+    );
+    
+    return $result ? $wpdb->insert_id : false;
+}
+
+/**
+ * Deduct credits from a client's account.
+ *
+ * @param int    $client_id The client ID.
+ * @param int    $amount The amount of credits to deduct (use a negative number).
+ * @param string $transaction_type The type of transaction (task, api, etc.).
+ * @param int    $reference_id Reference ID (e.g., task ID).
+ * @param string $notes Notes for the transaction.
+ * @return int|false The transaction ID or false on failure.
+ */
+function ryvr_deduct_client_credits( $client_id, $amount, $transaction_type = 'task', $reference_id = 0, $notes = '' ) {
+    return ryvr_add_client_credits(
+        $client_id,
+        -1 * abs( $amount ),
+        'regular',
+        $transaction_type,
+        $reference_id,
+        $notes
+    );
+}
+
+/**
+ * Check if a client has enough credits.
+ *
+ * @param int $client_id The client ID.
+ * @param int $amount The amount of credits needed.
+ * @return bool True if the client has enough credits, false otherwise.
+ */
+function ryvr_client_has_enough_credits( $client_id, $amount ) {
+    $balance = ryvr_get_client_credits( $client_id );
+    return $balance >= $amount;
 } 

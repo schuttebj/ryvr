@@ -49,73 +49,60 @@ $clients = $client_manager ? $client_manager->get_clients() : [];
         </div>
     <?php else : ?>
         <div class="ryvr-task-form-container">
-            <form id="ryvr-new-task-form" method="post">
-                <?php wp_nonce_field( 'ryvr_nonce', 'ryvr_nonce' ); ?>
-                <?php wp_nonce_field( 'ryvr_task_nonce', 'ryvr_task_nonce' ); ?>
+            <form id="ryvr-new-task-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                <?php wp_nonce_field( 'ryvr_create_task', 'ryvr_task_nonce' ); ?>
+                <input type="hidden" name="action" value="ryvr_create_task">
                 
-                <div class="ryvr-form-section">
-                    <h2><?php esc_html_e( 'Select Task Type', 'ryvr-ai' ); ?></h2>
-                    
-                    <div class="ryvr-task-types">
-                        <?php foreach ( $task_types as $type => $info ) : ?>
-                            <div class="ryvr-task-type-card <?php echo $selected_type === $type ? 'selected' : ''; ?>" data-task-type="<?php echo esc_attr( $type ); ?>" data-credits="<?php echo esc_attr( $info['credits_cost'] ); ?>">
-                                <div class="ryvr-task-type-header">
-                                    <span class="dashicons dashicons-<?php echo esc_attr( $info['icon'] ); ?>"></span>
-                                    <h3><?php echo esc_html( $info['name'] ); ?></h3>
-                                </div>
-                                <div class="ryvr-task-type-description">
-                                    <p><?php echo esc_html( $info['description'] ); ?></p>
-                                </div>
-                                <div class="ryvr-task-type-cost">
-                                    <?php 
-                                    echo esc_html(
-                                        sprintf(
-                                            /* translators: %d: number of credits */
-                                            _n( '%d Credit', '%d Credits', $info['credits_cost'], 'ryvr-ai' ),
-                                            $info['credits_cost']
-                                        )
-                                    ); 
-                                    ?>
-                                </div>
-                            </div>
+                <div class="ryvr-form-field">
+                    <label for="task_type"><?php esc_html_e( 'Task Type', 'ryvr-ai' ); ?></label>
+                    <select id="task_type" name="task_type" required>
+                        <option value=""><?php esc_html_e( 'Select Task Type', 'ryvr-ai' ); ?></option>
+                        <?php foreach ( $task_types as $type => $task_info ) : ?>
+                            <option value="<?php echo esc_attr( $type ); ?>" <?php selected( $selected_type, $type ); ?> data-credits="<?php echo esc_attr( $task_info['credits_cost'] ); ?>"><?php echo esc_html( $task_info['name'] ); ?> (<?php echo esc_html( $task_info['credits_cost'] ); ?> <?php esc_html_e( 'credits', 'ryvr-ai' ); ?>)</option>
                         <?php endforeach; ?>
-                    </div>
-                    
-                    <input type="hidden" name="task_type" id="task_type" value="<?php echo esc_attr( $selected_type ); ?>">
+                    </select>
+                    <p class="description" id="task-description"></p>
                 </div>
                 
-                <div class="ryvr-form-section" id="task-details-section" style="<?php echo empty( $selected_type ) ? 'display: none;' : ''; ?>">
-                    <h2><?php esc_html_e( 'Task Details', 'ryvr-ai' ); ?></h2>
-                    
-                    <?php if (!empty($clients)): ?>
-                    <div class="ryvr-form-field">
-                        <label for="client_id"><?php esc_html_e( 'Client', 'ryvr-ai' ); ?></label>
-                        <?php echo $client_manager->get_client_dropdown('client_id', 0, true); ?>
-                        <p class="description"><?php esc_html_e( 'Select a client for this task. Client-specific API keys will be used if available.', 'ryvr-ai' ); ?></p>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <div class="ryvr-form-field">
-                        <label for="task_title"><?php esc_html_e( 'Task Title', 'ryvr-ai' ); ?></label>
-                        <input type="text" name="task_title" id="task_title" class="regular-text" required>
-                        <p class="description"><?php esc_html_e( 'Enter a descriptive title for this task.', 'ryvr-ai' ); ?></p>
-                    </div>
-                    
-                    <div class="ryvr-form-field">
-                        <label for="task_description"><?php esc_html_e( 'Description (Optional)', 'ryvr-ai' ); ?></label>
-                        <textarea name="task_description" id="task_description" rows="3" class="large-text"></textarea>
-                        <p class="description"><?php esc_html_e( 'Provide additional details about this task.', 'ryvr-ai' ); ?></p>
-                    </div>
-                    
-                    <!-- Task type specific fields will be loaded here -->
-                    <div id="task-specific-fields"></div>
-                    
-                    <div class="ryvr-form-submit">
-                        <p class="ryvr-credits-required">
-                            <?php esc_html_e( 'Credits Required:', 'ryvr-ai' ); ?> <span id="credits-cost">0</span>
+                <div class="ryvr-form-field">
+                    <label for="title"><?php esc_html_e( 'Task Title', 'ryvr-ai' ); ?></label>
+                    <input type="text" id="title" name="title" required placeholder="<?php esc_attr_e( 'Enter task title', 'ryvr-ai' ); ?>">
+                </div>
+                
+                <div class="ryvr-form-field">
+                    <label for="client_id"><?php esc_html_e( 'Client', 'ryvr-ai' ); ?></label>
+                    <?php 
+                    if ($client_manager) {
+                        echo $client_manager->get_client_dropdown('client_id', 0, true);
+                    } else {
+                        echo '<select id="client_id" name="client_id"><option value="">' . esc_html__('No clients available', 'ryvr-ai') . '</option></select>';
+                    }
+                    ?>
+                    <div id="client-credits-info" style="display:none; margin-top:10px; padding:10px; background:#f9f9f9; border-left:4px solid #007cba;">
+                        <p>
+                            <?php esc_html_e('Client credit balance:', 'ryvr-ai'); ?> 
+                            <span id="client-credit-balance">0</span> <?php esc_html_e('credits', 'ryvr-ai'); ?>
                         </p>
-                        <button type="submit" class="button button-primary" id="create-task-button"><?php esc_html_e( 'Create Task', 'ryvr-ai' ); ?></button>
+                        <p id="client-credit-warning" style="color:#d63638; display:none;">
+                            <?php esc_html_e('Warning: Client does not have enough credits for this task.', 'ryvr-ai'); ?>
+                        </p>
                     </div>
+                </div>
+                
+                <div class="ryvr-form-field">
+                    <label for="task_description"><?php esc_html_e( 'Description (Optional)', 'ryvr-ai' ); ?></label>
+                    <textarea name="task_description" id="task_description" rows="3" class="large-text"></textarea>
+                    <p class="description"><?php esc_html_e( 'Provide additional details about this task.', 'ryvr-ai' ); ?></p>
+                </div>
+                
+                <!-- Task type specific fields will be loaded here -->
+                <div id="task-specific-fields"></div>
+                
+                <div class="ryvr-form-submit">
+                    <p class="ryvr-credits-required">
+                        <?php esc_html_e( 'Credits Required:', 'ryvr-ai' ); ?> <span id="credits-cost">0</span>
+                    </p>
+                    <button type="submit" class="button button-primary" id="create-task-button"><?php esc_html_e( 'Create Task', 'ryvr-ai' ); ?></button>
                 </div>
             </form>
             
@@ -247,35 +234,70 @@ $clients = $client_manager ? $client_manager->get_clients() : [];
 <script>
 jQuery(document).ready(function($) {
     // Task type selection
-    $('.ryvr-task-type-card').on('click', function() {
-        $('.ryvr-task-type-card').removeClass('selected');
-        $(this).addClass('selected');
+    $('#task_type').on('change', function() {
+        var selectedOption = $(this).find('option:selected');
+        var taskType = selectedOption.val();
         
-        var taskType = $(this).data('task-type');
-        var credits = $(this).data('credits');
+        // Show task description based on selection
+        if (taskType) {
+            // Get the task description from the server
+            $.post(ajaxurl, {
+                action: 'ryvr_get_task_type_info',
+                task_type: taskType
+            }, function(response) {
+                if (response.success) {
+                    $('#task-description').html(response.data.description);
+                }
+            });
+        } else {
+            $('#task-description').html('');
+        }
         
-        $('#task_type').val(taskType);
-        $('#credits-cost').text(credits);
-        
-        // Show task details section
-        $('#task-details-section').show();
-        
-        // Load task-specific fields
-        loadTaskSpecificFields(taskType);
+        // Check client credits if client is selected
+        checkClientCredits();
     });
     
-    // Pre-select task type if set in URL
-    var selectedType = $('#task_type').val();
-    if (selectedType) {
-        var creditsCost = $('.ryvr-task-type-card[data-task-type="' + selectedType + '"]').data('credits');
-        $('#credits-cost').text(creditsCost);
-        loadTaskSpecificFields(selectedType);
-    }
+    // Client selection
+    $('#client_id').on('change', function() {
+        var clientId = $(this).val();
+        
+        if (clientId) {
+            // Get client credits
+            $.post(ajaxurl, {
+                action: 'ryvr_get_client_credits',
+                client_id: clientId
+            }, function(response) {
+                if (response.success) {
+                    // Show client credits info
+                    $('#client-credits-info').show();
+                    $('#client-credit-balance').text(response.data.credits_formatted);
+                    
+                    // Check if client has enough credits
+                    checkClientCredits();
+                } else {
+                    $('#client-credits-info').hide();
+                }
+            });
+        } else {
+            $('#client-credits-info').hide();
+        }
+    });
     
-    // Load task-specific fields
-    function loadTaskSpecificFields(taskType) {
-        var template = $('#template-' + taskType).html();
-        $('#task-specific-fields').html(template || '');
+    function checkClientCredits() {
+        var clientId = $('#client_id').val();
+        if (!clientId) {
+            $('#client-credit-warning').hide();
+            return;
+        }
+        
+        var taskCredits = $('#task_type option:selected').data('credits') || 0;
+        var clientCredits = parseInt($('#client-credit-balance').text().replace(/,/g, '')) || 0;
+        
+        if (taskCredits > clientCredits) {
+            $('#client-credit-warning').show();
+        } else {
+            $('#client-credit-warning').hide();
+        }
     }
     
     // Form submission
