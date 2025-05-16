@@ -199,6 +199,7 @@ class Task_Engine {
      * Schedule task processing.
      *
      * This method schedules immediate task processing for pending tasks.
+     * This helps ensure tasks are processed promptly.
      *
      * @return void
      */
