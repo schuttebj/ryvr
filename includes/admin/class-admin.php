@@ -22,6 +22,20 @@ namespace Ryvr\Admin;
 class Admin {
 
     /**
+     * Notifications page instance
+     *
+     * @var Notifications_Page
+     */
+    private $notifications_page;
+
+    /**
+     * Client manager instance
+     *
+     * @var Client_Manager
+     */
+    public $client_manager;
+
+    /**
      * Initialize the class.
      *
      * @return void
@@ -31,10 +45,15 @@ class Admin {
         require_once RYVR_INCLUDES_DIR . 'admin/class-settings.php';
         require_once RYVR_INCLUDES_DIR . 'admin/class-tasks.php';
         require_once RYVR_INCLUDES_DIR . 'admin/class-notifications-page.php';
+        require_once RYVR_INCLUDES_DIR . 'admin/class-client-manager.php';
         
         // Initialize notifications page.
         $this->notifications_page = new Notifications_Page();
         $this->notifications_page->init();
+        
+        // Initialize client manager
+        $this->client_manager = new Client_Manager();
+        $this->client_manager->init();
         
         // Register hooks.
         $this->register_hooks();
@@ -57,6 +76,10 @@ class Admin {
         
         // Plugin action links.
         add_filter( 'plugin_action_links_' . RYVR_PLUGIN_BASENAME, [ $this, 'add_plugin_action_links' ] );
+        
+        // AJAX handlers
+        add_action( 'wp_ajax_ryvr_test_openai_connection', [ $this, 'ajax_test_openai_connection' ] );
+        add_action( 'wp_ajax_ryvr_test_dataforseo_connection', [ $this, 'ajax_test_dataforseo_connection' ] );
     }
 
     /**
@@ -72,7 +95,7 @@ class Admin {
             'read',
             'ryvr-ai',
             [ $this, 'render_dashboard_page' ],
-            RYVR_ASSETS_URL . 'images/ryvr-icon.png',
+            'dashicons-chart-area',
             25
         );
 
@@ -383,5 +406,109 @@ class Admin {
             wp_die(__('Sorry, you are not allowed to access this page.', 'ryvr-ai'));
         }
         require_once RYVR_TEMPLATES_DIR . 'admin/settings.php';
+    }
+
+    /**
+     * AJAX handler for testing OpenAI API connection
+     */
+    public function ajax_test_openai_connection() {
+        // Check nonce
+        check_ajax_referer( 'ryvr_test_api', 'nonce' );
+        
+        // Check permissions
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ryvr-ai' ) ] );
+        }
+        
+        // Get API key from request
+        $api_key = isset( $_POST['api_key'] ) ? sanitize_text_field( $_POST['api_key'] ) : '';
+        
+        if ( empty( $api_key ) ) {
+            wp_send_json_error( [ 'message' => __( 'API key is required.', 'ryvr-ai' ) ] );
+            return;
+        }
+        
+        // Get API Manager
+        $api_manager = ryvr()->get_component( 'api_manager' );
+        
+        if ( ! $api_manager ) {
+            wp_send_json_error( [ 'message' => __( 'API Manager not available.', 'ryvr-ai' ) ] );
+            return;
+        }
+        
+        // Get OpenAI service
+        $openai_service = $api_manager->get_service( 'openai' );
+        
+        if ( ! $openai_service ) {
+            wp_send_json_error( [ 'message' => __( 'OpenAI service not available.', 'ryvr-ai' ) ] );
+            return;
+        }
+        
+        // Save API key temporarily
+        update_option( 'ryvr_openai_api_key', $api_key );
+        
+        // Test connection
+        $result = $openai_service->test_connection();
+        
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( [ 'message' => $result->get_error_message() ] );
+            return;
+        }
+        
+        // Return success
+        wp_send_json_success( [ 'message' => __( 'Connection successful!', 'ryvr-ai' ) ] );
+    }
+    
+    /**
+     * AJAX handler for testing DataForSEO API connection
+     */
+    public function ajax_test_dataforseo_connection() {
+        // Check nonce
+        check_ajax_referer( 'ryvr_test_api', 'nonce' );
+        
+        // Check permissions
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ryvr-ai' ) ] );
+        }
+        
+        // Get API credentials from request
+        $username = isset( $_POST['username'] ) ? sanitize_text_field( $_POST['username'] ) : '';
+        $password = isset( $_POST['password'] ) ? sanitize_text_field( $_POST['password'] ) : '';
+        
+        if ( empty( $username ) || empty( $password ) ) {
+            wp_send_json_error( [ 'message' => __( 'Username and password are required.', 'ryvr-ai' ) ] );
+            return;
+        }
+        
+        // Get API Manager
+        $api_manager = ryvr()->get_component( 'api_manager' );
+        
+        if ( ! $api_manager ) {
+            wp_send_json_error( [ 'message' => __( 'API Manager not available.', 'ryvr-ai' ) ] );
+            return;
+        }
+        
+        // Get DataForSEO service
+        $dataforseo_service = $api_manager->get_service( 'dataforseo' );
+        
+        if ( ! $dataforseo_service ) {
+            wp_send_json_error( [ 'message' => __( 'DataForSEO service not available.', 'ryvr-ai' ) ] );
+            return;
+        }
+        
+        // Save API credentials temporarily
+        update_option( 'ryvr_dataforseo_api_login', $username );
+        update_option( 'ryvr_dataforseo_api_password', $password );
+        
+        // Test connection
+        $result = $dataforseo_service->test_connection();
+        
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( [ 'message' => $result->get_error_message() ] );
+            return;
+        }
+        
+        // Return success
+        wp_send_json_success( [ 'message' => __( 'Connection successful!', 'ryvr-ai' ) ] );
     }
 } 
