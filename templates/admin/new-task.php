@@ -51,6 +51,7 @@ $clients = $client_manager ? $client_manager->get_clients() : [];
         <div class="ryvr-task-form-container">
             <form id="ryvr-new-task-form" method="post">
                 <?php wp_nonce_field( 'ryvr_nonce', 'ryvr_nonce' ); ?>
+                <?php wp_nonce_field( 'ryvr_task_nonce', 'ryvr_task_nonce' ); ?>
                 
                 <div class="ryvr-form-section">
                     <h2><?php esc_html_e( 'Select Task Type', 'ryvr-ai' ); ?></h2>
@@ -287,13 +288,19 @@ jQuery(document).ready(function($) {
             return;
         }
         
+        console.log('Submitting task with type:', taskType);
+        
         // Get form data
         var formData = $(this).serialize();
         formData += '&action=ryvr_create_task';
-        formData += '&nonce=<?php echo wp_create_nonce('ryvr_task_nonce'); ?>';
+        
+        console.log('Form data:', formData);
         
         // Disable submit button
         $('#create-task-button').prop('disabled', true).text('<?php echo esc_js( __( 'Creating Task...', 'ryvr-ai' ) ); ?>');
+        
+        // Clear any previous errors
+        $('.ryvr-form-error').remove();
         
         // Submit task
         $.ajax({
@@ -301,6 +308,8 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: formData,
             success: function(response) {
+                console.log('Server response:', response);
+                
                 if (response.success) {
                     // Show success message
                     $('#ryvr-new-task-form').hide();
@@ -311,12 +320,38 @@ jQuery(document).ready(function($) {
                     $('#view-task-button').attr('href', '<?php echo esc_url( admin_url( 'admin.php?page=ryvr-ai-tasks&task=' ) ); ?>' + response.data.task_id);
                 } else {
                     // Show error message
-                    alert(response.data.message || '<?php echo esc_js( __( 'An error occurred while creating the task.', 'ryvr-ai' ) ); ?>');
+                    console.error('Task creation failed:', response);
+                    var errorMsg = response.data && response.data.message ? response.data.message : '<?php echo esc_js( __( 'An error occurred while creating the task.', 'ryvr-ai' ) ); ?>';
+                    
+                    alert(errorMsg);
+                    $('.ryvr-form-submit').prepend('<div class="ryvr-form-error notice notice-error"><p>' + errorMsg + '</p></div>');
                     $('#create-task-button').prop('disabled', false).text('<?php echo esc_js( __( 'Create Task', 'ryvr-ai' ) ); ?>');
                 }
             },
-            error: function() {
-                alert('<?php echo esc_js( __( 'An error occurred while communicating with the server.', 'ryvr-ai' ) ); ?>');
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', status, error);
+                console.log('Response text:', xhr.responseText);
+                
+                // Try to extract error message from response
+                var errorMsg = '<?php echo esc_js( __( 'An error occurred while communicating with the server.', 'ryvr-ai' ) ); ?>';
+                
+                try {
+                    if (xhr.responseText) {
+                        var responseData = JSON.parse(xhr.responseText);
+                        if (responseData.message) {
+                            errorMsg += ' ' + responseData.message;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                    // If the response contains text, display the first 100 characters
+                    if (xhr.responseText && xhr.responseText.length > 0) {
+                        errorMsg += ' Server said: ' + xhr.responseText.substring(0, 100) + (xhr.responseText.length > 100 ? '...' : '');
+                    }
+                }
+                
+                alert(errorMsg);
+                $('.ryvr-form-submit').prepend('<div class="ryvr-form-error notice notice-error"><p>' + errorMsg + '</p></div>');
                 $('#create-task-button').prop('disabled', false).text('<?php echo esc_js( __( 'Create Task', 'ryvr-ai' ) ); ?>');
             }
         });

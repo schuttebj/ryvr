@@ -262,35 +262,37 @@ class Task_Engine {
      * @param string $title Task title.
      * @param array  $inputs Task inputs.
      * @param string $description Task description.
-     * @param int    $priority Task priority (0-100, higher = more important).
+     * @param int    $priority Task priority.
      * @param array  $dependencies Array of task IDs this task depends on.
      * @return int|WP_Error Task ID or error.
      */
     public function create_task( $user_id, $task_type, $title, $inputs = [], $description = '', $priority = 50, $dependencies = [] ) {
-        global $wpdb;
+        // Log attempt for debugging
+        error_log(sprintf('Creating task: type=%s, title=%s, user=%d', $task_type, $title, $user_id));
         
-        // Check if task type exists.
+        // Validate task type.
         if ( ! isset( $this->task_types[ $task_type ] ) ) {
+            error_log(sprintf('Invalid task type: %s', $task_type));
             return new \WP_Error( 'invalid_task_type', __( 'Invalid task type.', 'ryvr-ai' ) );
         }
         
-        // Get task type details.
-        $task_info = $this->task_types[ $task_type ];
-        
-        // Check if user has enough credits.
-        $credits_cost = $task_info['credits_cost'];
-        $credits_available = $this->get_user_available_credits( $user_id );
-        
-        if ( $credits_available < $credits_cost ) {
-            return new \WP_Error(
-                'insufficient_credits',
-                sprintf(
-                    __( 'Insufficient credits. Required: %d, Available: %d.', 'ryvr-ai' ),
-                    $credits_cost,
-                    $credits_available
-                )
-            );
+        // Validate title.
+        if ( empty( $title ) ) {
+            error_log('Empty task title');
+            return new \WP_Error( 'empty_title', __( 'Task title is required.', 'ryvr-ai' ) );
         }
+        
+        // Check for credits.
+        $credits_cost = $this->task_types[ $task_type ]['credits_cost'];
+        $user_credits = ryvr_get_user_credits( $user_id );
+        
+        if ( $user_credits < $credits_cost ) {
+            error_log(sprintf('Insufficient credits: user=%d, needed=%d, available=%d', $user_id, $credits_cost, $user_credits));
+            return new \WP_Error( 'insufficient_credits', __( 'You do not have enough credits to create this task.', 'ryvr-ai' ) );
+        }
+        
+        // Get task type details.
+        $task_info = $this->task_types[$task_type];
         
         // Validate priority
         $priority = max(0, min(100, (int) $priority)); // Ensure priority is between 0 and 100
@@ -336,7 +338,7 @@ class Task_Engine {
         ];
         
         // If task requires approval, set status to 'approval_required'.
-        if ( $task_info['requires_approval'] && $initial_status === 'pending' ) {
+        if ($task_info['requires_approval'] && $initial_status === 'pending') {
             $data['status'] = 'approval_required';
         }
         
@@ -1011,56 +1013,125 @@ class Task_Engine {
      * @return void
      */
     public function ajax_create_task() {
-        // Check nonce.
-        check_ajax_referer( 'ryvr_task_nonce', 'nonce' );
+        global $wpdb;
         
-        // Check capabilities.
-        if ( ! current_user_can( 'edit_posts' ) ) {
-            wp_send_json_error( array(
-                'message' => __( 'You do not have permission to create tasks.', 'ryvr-ai' ),
-            ) );
+        // Enable error reporting 
+        error_reporting(E_ALL);
+        ini_set('display_errors', 1);
+        
+        try {
+            // Log debug information
+            error_log('AJAX create_task started');
+            
+            // Check POST data
+            error_log('POST data: ' . print_r($_POST, true));
+            
+            // Check nonce.
+            $nonce_verified = false;
+            
+            if (isset($_POST['ryvr_task_nonce'])) {
+                error_log('Checking nonce: ryvr_task_nonce');
+                $nonce_verified = wp_verify_nonce($_POST['ryvr_task_nonce'], 'ryvr_task_nonce');
+            } else if (isset($_POST['nonce'])) {
+                error_log('Checking nonce: nonce');
+                $nonce_verified = wp_verify_nonce($_POST['nonce'], 'ryvr_task_nonce');
+            }
+            
+            if (!$nonce_verified) {
+                error_log('Nonce verification failed');
+                wp_send_json_error([
+                    'message' => __('Security check failed. Please refresh the page and try again.', 'ryvr-ai'),
+                ]);
+                return;
+            }
+            
+            // Check capabilities.
+            if (!current_user_can('edit_posts')) {
+                error_log('Permission check failed: edit_posts');
+                wp_send_json_error([
+                    'message' => __('You do not have permission to create tasks.', 'ryvr-ai'),
+                ]);
+                return;
+            }
+            
+            // Get parameters.
+            $task_type = isset($_POST['task_type']) ? sanitize_text_field($_POST['task_type']) : '';
+            error_log('Task type: ' . $task_type);
+            
+            if (empty($task_type)) {
+                error_log('Task type is empty');
+                wp_send_json_error([
+                    'message' => __('Task type is required.', 'ryvr-ai'),
+                ]);
+                return;
+            }
+            
+            $title = isset($_POST['task_title']) ? sanitize_text_field($_POST['task_title']) : '';
+            error_log('Task title: ' . $title);
+            
+            if (empty($title)) {
+                error_log('Task title is empty');
+                wp_send_json_error([
+                    'message' => __('Task title is required.', 'ryvr-ai'),
+                ]);
+                return;
+            }
+            
+            $description = isset($_POST['task_description']) ? sanitize_textarea_field($_POST['task_description']) : '';
+            $priority = isset($_POST['priority']) ? (int)$_POST['priority'] : 50;
+            $inputs = isset($_POST['inputs']) ? $_POST['inputs'] : [];
+            $dependencies = isset($_POST['dependencies']) ? array_map('intval', (array)$_POST['dependencies']) : [];
+            $client_id = isset($_POST['client_id']) ? intval($_POST['client_id']) : 0;
+            
+            error_log('Inputs: ' . print_r($inputs, true));
+            
+            // Sanitize inputs.
+            if (is_array($inputs)) {
+                array_walk_recursive($inputs, function (&$value) {
+                    if (is_string($value)) {
+                        $value = sanitize_text_field($value);
+                    }
+                });
+            } else {
+                $inputs = [];
+            }
+            
+            // Add client ID to inputs if provided
+            if ($client_id > 0) {
+                $inputs['client_id'] = $client_id;
+            }
+            
+            // Create task.
+            $result = $this->create_task(
+                get_current_user_id(),
+                $task_type,
+                $title,
+                $inputs,
+                $description,
+                $priority,
+                $dependencies
+            );
+            
+            if (is_wp_error($result)) {
+                error_log('Task creation failed: ' . $result->get_error_message());
+                wp_send_json_error([
+                    'message' => $result->get_error_message(),
+                ]);
+                return;
+            }
+            
+            error_log('Task created successfully: ' . $result);
+            wp_send_json_success([
+                'task_id' => $result,
+                'message' => __('Task created successfully.', 'ryvr-ai'),
+            ]);
+            
+        } catch (Exception $e) {
+            error_log('Exception in ajax_create_task: ' . $e->getMessage());
+            wp_send_json_error([
+                'message' => __('An unexpected error occurred: ', 'ryvr-ai') . $e->getMessage(),
+            ]);
         }
-        
-        // Get parameters.
-        $task_type = isset( $_POST['task_type'] ) ? sanitize_text_field( $_POST['task_type'] ) : '';
-        $title = isset( $_POST['title'] ) ? sanitize_text_field( $_POST['title'] ) : '';
-        $description = isset( $_POST['description'] ) ? sanitize_textarea_field( $_POST['description'] ) : '';
-        $inputs = isset( $_POST['inputs'] ) ? $_POST['inputs'] : array();
-        $priority = isset( $_POST['priority'] ) ? (int) $_POST['priority'] : 50;
-        $dependencies = isset( $_POST['dependencies'] ) ? array_map( 'intval', (array) $_POST['dependencies'] ) : array();
-        
-        // Sanitize inputs.
-        if ( is_array( $inputs ) ) {
-            array_walk_recursive( $inputs, function( &$value ) {
-                if ( is_string( $value ) ) {
-                    $value = sanitize_text_field( $value );
-                }
-            } );
-        } else {
-            $inputs = array();
-        }
-        
-        // Create task.
-        $result = $this->create_task(
-            get_current_user_id(),
-            $task_type,
-            $title,
-            $inputs,
-            $description,
-            $priority,
-            $dependencies
-        );
-        
-        if ( is_wp_error( $result ) ) {
-            wp_send_json_error( array(
-                'message' => $result->get_error_message(),
-            ) );
-        }
-        
-        wp_send_json_success( array(
-            'task_id' => $result,
-            'message' => __( 'Task created successfully.', 'ryvr-ai' ),
-        ) );
     }
 
     /**
