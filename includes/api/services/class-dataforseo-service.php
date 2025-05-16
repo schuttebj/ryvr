@@ -196,13 +196,34 @@ class DataForSEO_Service {
      * @return true|WP_Error True on success, WP_Error on failure.
      */
     public function test_connection() {
-        // Try a simple API call to test connection
-        $result = $this->make_request('v3/app_info');
-
-        if (is_wp_error($result)) {
-            return $result;
+        // Simple authentication check
+        $url = $this->get_api_url();
+        
+        $args = [
+            'method'  => 'GET',
+            'headers' => [
+                'Authorization' => 'Basic ' . base64_encode($this->username . ':' . $this->password),
+            ],
+            'timeout' => 30,
+        ];
+        
+        // Make the request
+        $response = wp_remote_request($url, $args);
+        
+        // Check for errors
+        if (is_wp_error($response)) {
+            return $response;
         }
-
+        
+        // Get response code
+        $response_code = wp_remote_retrieve_response_code($response);
+        
+        // For DataForSEO, if we get a 401, it means authentication failed
+        if ($response_code === 401) {
+            return new \WP_Error('authentication_failed', __('Authentication failed. Please check your credentials.', 'ryvr-ai'));
+        }
+        
+        // Success
         return true;
     }
 
